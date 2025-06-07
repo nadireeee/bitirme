@@ -15,6 +15,17 @@ import { Card, Chip, Avatar } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
 import LanguageSwitch from "../components/common/LanguageSwitch";
+import responsive, {
+  wp,
+  hp,
+  typography,
+  spacing,
+  commonStyles,
+  getGridColumns,
+  getCardWidth,
+  isTablet,
+  isSmallPhone,
+} from "../utils/responsive";
 
 const { height } = Dimensions.get("window");
 
