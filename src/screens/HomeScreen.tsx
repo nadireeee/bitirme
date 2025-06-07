@@ -431,7 +431,7 @@ const HomeScreen = () => {
                       { color: colors.textSecondary },
                     ]}
                   >
-                    ��lerleme: %{course.progress}
+                    İlerleme: %{course.progress}
                   </Text>
                   <View
                     style={[
@@ -722,7 +722,7 @@ const HomeScreen = () => {
               {t("home.popularCourses.title")} 🎓
             </Text>
             <TouchableOpacity
-              onPress={() => navigation.navigate(t("navigation.courses"))}
+              onPress={() => navigation.navigate("Courses" as any)}
             >
               <Text style={[styles.seeAllText, { color: colors.primary }]}>
                 {t("common.all", "Tümünü Gör")}
