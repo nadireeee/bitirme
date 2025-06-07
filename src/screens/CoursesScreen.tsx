@@ -16,10 +16,19 @@ import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../contexts/ThemeContext";
 import LanguageSwitch from "../components/common/LanguageSwitch";
+import responsive, {
+  wp,
+  hp,
+  typography,
+  spacing,
+  commonStyles,
+  getGridColumns,
+  getCardWidth,
+  isTablet,
+  isSmallPhone,
+} from "../utils/responsive";
 
 const { width, height } = Dimensions.get("window");
-const isTablet = width > 768;
-const isMobile = width <= 480;
 
 const CoursesScreen = () => {
   const navigation = useNavigation();
