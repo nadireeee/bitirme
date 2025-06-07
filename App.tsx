@@ -32,8 +32,8 @@ import AIChatScreen from "./src/screens/AIChatScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import CourseDetailScreen from "./src/screens/CourseDetailScreen";
 
-const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator<MainTabParamList>();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 // Custom theme matching CodeMentor AI design
 const customTheme = {
