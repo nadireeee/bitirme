@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
-import { Card, Button, ProgressBar, Chip } from "react-native-paper";
+import { Card, Button, ProgressBar, Chip, FAB } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import responsive, {
@@ -23,11 +23,12 @@ import {
   quizCategories,
   QuizCategory,
   QuizQuestion,
-  TestResult,
   getQuestionsByCategory,
   getCategoriesByLevel,
 } from "../data/quizData";
+import QuizHelper from "../components/ai/QuizHelper";
 import { saveQuizResult } from "../utils/quizStorage";
+import { TestResult } from "../data/quizData";
 
 type LevelFilter = "all" | "beginner" | "intermediate" | "advanced";
 
@@ -42,6 +43,10 @@ const QuizScreen = ({ navigation }: any) => {
   const [showResult, setShowResult] = useState(false);
   const [userAnswers, setUserAnswers] = useState<number[]>([]);
   const [startTime, setStartTime] = useState<Date>(new Date());
+
+  // AI Helper state
+  const [showAiHelper, setShowAiHelper] = useState(false);
+  const [aiHintReceived, setAiHintReceived] = useState(false);
 
   const levels = [
     { key: "all", label: "Tümü", labelEN: "All", color: "#64748b" },
@@ -86,6 +91,7 @@ const QuizScreen = ({ navigation }: any) => {
     setUserAnswers([]);
     setShowResult(false);
     setStartTime(new Date());
+    setAiHintReceived(false);
   };
 
   const handleAnswerSelect = (answerIndex: number) => {
@@ -107,6 +113,7 @@ const QuizScreen = ({ navigation }: any) => {
     if (currentQuestion + 1 < quizQuestions.length) {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedAnswer(null);
+      setAiHintReceived(false);
     } else {
       // Quiz completed, save result
       const endTime = new Date();
@@ -143,6 +150,7 @@ const QuizScreen = ({ navigation }: any) => {
     setQuizQuestions([]);
     setShowResult(false);
     setUserAnswers([]);
+    setAiHintReceived(false);
   };
 
   const calculatePercentage = () => {
@@ -155,6 +163,12 @@ const QuizScreen = ({ navigation }: any) => {
     if (percentage >= 90) return "#10b981";
     if (percentage >= 70) return "#f59e0b";
     return "#ef4444";
+  };
+
+  const handleAiHint = (hint: string) => {
+    setAiHintReceived(true);
+    // You could show the hint in a toast or small notification
+    Alert.alert("AI İpucu Alındı", "AI ipucunu aldınız. Quiz devam edebilir!");
   };
 
   if (selectedQuiz && !showResult) {
@@ -179,6 +193,12 @@ const QuizScreen = ({ navigation }: any) => {
                 Soru {currentQuestion + 1} / {quizQuestions.length}
               </Text>
             </View>
+            <TouchableOpacity
+              style={styles.aiButton}
+              onPress={() => setShowAiHelper(true)}
+            >
+              <Ionicons name="sparkles" size={wp(6)} color="#06b6d4" />
+            </TouchableOpacity>
           </View>
 
           {/* Progress Bar */}
@@ -192,6 +212,16 @@ const QuizScreen = ({ navigation }: any) => {
               %{Math.round(progress * 100)} Tamamlandı
             </Text>
           </View>
+
+          {/* AI Hint Indicator */}
+          {aiHintReceived && (
+            <Card style={styles.hintCard}>
+              <Card.Content style={styles.hintContent}>
+                <Ionicons name="lightbulb" size={wp(5)} color="#f59e0b" />
+                <Text style={styles.hintText}>AI ipucu aldınız!</Text>
+              </Card.Content>
+            </Card>
+          )}
 
           {/* Question Card */}
           <Card style={styles.questionCard}>
@@ -257,6 +287,24 @@ const QuizScreen = ({ navigation }: any) => {
               : "Sonraki Soru"}
           </Button>
         </ScrollView>
+
+        {/* AI Helper Modal */}
+        <QuizHelper
+          question={question.question}
+          options={question.options}
+          userAnswer={selectedAnswer ?? undefined}
+          isVisible={showAiHelper}
+          onClose={() => setShowAiHelper(false)}
+          onHintReceived={handleAiHint}
+        />
+
+        {/* Floating AI Button */}
+        <FAB
+          icon="sparkles"
+          style={styles.aiFab}
+          onPress={() => setShowAiHelper(true)}
+          label="AI Yardım"
+        />
       </View>
     );
   }
@@ -306,6 +354,11 @@ const QuizScreen = ({ navigation }: any) => {
                   }{" "}
                   / {quizQuestions.length} Doğru
                 </Text>
+                {aiHintReceived && (
+                  <Text style={styles.aiHintInfo}>
+                    🤖 AI yardımı kullanıldı
+                  </Text>
+                )}
               </View>
 
               <View style={styles.resultActions}>
@@ -353,6 +406,26 @@ const QuizScreen = ({ navigation }: any) => {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* AI Feature Highlight */}
+        <Card style={styles.aiFeatureCard}>
+          <Card.Content style={styles.aiFeatureContent}>
+            <View style={styles.aiFeatureHeader}>
+              <Ionicons name="sparkles" size={wp(6)} color="#06b6d4" />
+              <Text style={styles.aiFeatureTitle}>🚀 AI Destekli Quiz</Text>
+            </View>
+            <Text style={styles.aiFeatureDescription}>
+              Artık quiz çözerken AI asistanımızdan yardım alabilirsiniz!
+              Sorular hakkında ipucu, açıklama ve rehberlik için AI butonuna
+              tıklayın.
+            </Text>
+            <View style={styles.aiFeatures}>
+              <Text style={styles.aiFeatureItem}>✨ Akıllı ipuçları</Text>
+              <Text style={styles.aiFeatureItem}>📚 Konu açıklamaları</Text>
+              <Text style={styles.aiFeatureItem}>🎯 Çözüm stratejileri</Text>
+            </View>
+          </Card.Content>
+        </Card>
 
         {/* Level Filter */}
         <View style={styles.filterContainer}>
@@ -409,6 +482,9 @@ const QuizScreen = ({ navigation }: any) => {
                     <Text style={styles.categoryDescription}>
                       {category.descriptionTR}
                     </Text>
+                  </View>
+                  <View style={styles.aiIndicator}>
+                    <Ionicons name="sparkles" size={wp(4)} color="#06b6d4" />
                   </View>
                 </View>
 
@@ -509,6 +585,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
     textAlign: "center",
   },
+  subtitle: {
+    fontSize: isTablet() ? typography.h6 : typography.body1,
+    color: "#64748b",
+    textAlign: "center",
+    lineHeight: isTablet() ? typography.h6 * 1.4 : typography.body1 * 1.4,
+  },
   statsButton: {
     padding: spacing.sm,
     borderRadius: spacing.sm,
@@ -517,11 +599,42 @@ const styles = StyleSheet.create({
     borderColor: "#3b82f6",
     marginTop: spacing.xs,
   },
-  subtitle: {
-    fontSize: isTablet() ? typography.h6 : typography.body1,
-    color: "#64748b",
-    textAlign: "center",
-    lineHeight: isTablet() ? typography.h6 * 1.4 : typography.body1 * 1.4,
+  aiFeatureCard: {
+    backgroundColor: "#0f172a",
+    borderWidth: 1,
+    borderColor: "#06b6d4",
+    borderRadius: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  aiFeatureContent: {
+    padding: spacing.lg,
+  },
+  aiFeatureHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  aiFeatureTitle: {
+    fontSize: typography.h6,
+    fontWeight: "700",
+    color: "#f9fafb",
+  },
+  aiFeatureDescription: {
+    fontSize: typography.body2,
+    color: "#94a3b8",
+    lineHeight: typography.body2 * 1.4,
+    marginBottom: spacing.md,
+  },
+  aiFeatures: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.md,
+  },
+  aiFeatureItem: {
+    fontSize: typography.caption,
+    color: "#06b6d4",
+    fontWeight: "500",
   },
   filterContainer: {
     marginBottom: spacing.lg,
@@ -594,6 +707,11 @@ const styles = StyleSheet.create({
     color: "#64748b",
     lineHeight: typography.body2 * 1.4,
   },
+  aiIndicator: {
+    backgroundColor: "rgba(6, 182, 212, 0.1)",
+    borderRadius: wp(4),
+    padding: spacing.xs,
+  },
   categoryStats: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -657,6 +775,11 @@ const styles = StyleSheet.create({
     fontSize: typography.body2,
     color: "#64748b",
   },
+  aiButton: {
+    padding: spacing.sm,
+    borderRadius: spacing.sm,
+    backgroundColor: "rgba(6, 182, 212, 0.1)",
+  },
   progressContainer: {
     marginBottom: spacing.lg,
   },
@@ -670,6 +793,24 @@ const styles = StyleSheet.create({
     color: "#64748b",
     textAlign: "center",
     marginTop: spacing.xs,
+  },
+  hintCard: {
+    backgroundColor: "rgba(245, 158, 11, 0.1)",
+    borderWidth: 1,
+    borderColor: "#f59e0b",
+    borderRadius: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  hintContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    padding: spacing.sm,
+  },
+  hintText: {
+    fontSize: typography.body2,
+    color: "#f59e0b",
+    fontWeight: "500",
   },
   questionCard: {
     backgroundColor: "#0f172a",
@@ -742,6 +883,12 @@ const styles = StyleSheet.create({
     fontSize: typography.body1,
     fontWeight: "600",
   },
+  aiFab: {
+    position: "absolute",
+    bottom: spacing.xl,
+    right: spacing.lg,
+    backgroundColor: "#06b6d4",
+  },
   resultCard: {
     backgroundColor: "#0f172a",
     borderWidth: 1,
@@ -785,6 +932,11 @@ const styles = StyleSheet.create({
   correctAnswers: {
     fontSize: typography.body2,
     color: "#64748b",
+  },
+  aiHintInfo: {
+    fontSize: typography.caption,
+    color: "#06b6d4",
+    marginTop: spacing.xs,
   },
   resultActions: {
     flexDirection: "row",
