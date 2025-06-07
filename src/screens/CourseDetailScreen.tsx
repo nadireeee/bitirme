@@ -48,7 +48,6 @@ const CourseDetailScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { t } = useTranslation();
-  const colors = useSafeColors();
   const [activeTab, setActiveTab] = useState("overview");
 
   // Mock course data - normally would come from route params or API
