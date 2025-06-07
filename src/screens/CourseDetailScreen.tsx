@@ -33,21 +33,7 @@ const CourseDetailScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { t } = useTranslation();
-  const theme = useTheme();
-  const colors = theme?.colors || {
-    background: "#030712",
-    surface: "#0f172a",
-    text: "#f9fafb",
-    textSecondary: "#94a3b8",
-    outline: "#334155",
-    primary: "#3b82f6",
-    secondary: "#8b5cf6",
-    border: "#1e293b",
-    success: "#10b981",
-    warning: "#f59e0b",
-    error: "#ef4444",
-    card: "#0f172a",
-  };
+  const colors = useSafeColors();
   const [activeTab, setActiveTab] = useState("overview");
 
   // Mock course data - normally would come from route params or API
@@ -250,7 +236,7 @@ const CourseDetailScreen = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Eğitmen Hakkında</Text>
         <Text style={styles.sectionText}>
-          Dr. Mehmet Yılmaz, 15 yılı aşkın deneyime sahip bir yaz��lım
+          Dr. Mehmet Yılmaz, 15 yılı aşkın deneyime sahip bir yazılım
           geliştirici ve eğitmendir. Microsoft, Google gibi büyük teknoloji
           şirketlerinde çalışmış ve binlerce öğrenciye programlama öğretmiştir.
         </Text>
