@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: 60,
     paddingBottom: 30,
-    paddingHorizontal: isMobile ? 20 : isTablet ? 40 : 30,
+    paddingHorizontal: isSmallPhone() ? 20 : isTablet() ? 40 : 30,
   },
   headerContent: {
     alignItems: "center",
