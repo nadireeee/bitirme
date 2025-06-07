@@ -148,14 +148,22 @@ export const commonStyles = {
     fontSize: typography.body1,
   },
   shadow: {
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: isTablet() ? 4 : 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: isTablet() ? 6 : 3,
-    elevation: isTablet() ? 6 : 3,
+    ...(Platform.OS === "ios" || Platform.OS === "android"
+      ? {
+          shadowColor: "#000",
+          shadowOffset: {
+            width: 0,
+            height: isTablet() ? 4 : 2,
+          },
+          shadowOpacity: 0.1,
+          shadowRadius: isTablet() ? 6 : 3,
+          elevation: isTablet() ? 6 : 3,
+        }
+      : {
+          // Web fallback with box-shadow equivalent
+          borderWidth: 0.5,
+          borderColor: "rgba(0,0,0,0.1)",
+        }),
   },
 };
 
