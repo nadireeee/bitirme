@@ -6,7 +6,7 @@
     "aiChat": "AI Chat",
     "profile": "Profile",
     "codeEditor": "Code Editor",
-    "quiz": "Quiz",
+    "quiz": "Quizzes",
     "forum": "Forum",
     "progress": "Progress",
     "aiMentor": "AI Mentor",
@@ -14,6 +14,55 @@
     "learn": "Learn",
     "aiSupport": "AI Support",
     "community": "Community"
+  },
+  "quiz": {
+    "title": "Quizzes and Tests",
+    "subtitle": "Test your C/C++ knowledge and measure your level",
+    "levels": {
+      "all": "All",
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "difficulty": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "stats": {
+      "estimatedTime": "min",
+      "questions": "questions",
+      "passingScore": "passing"
+    },
+    "actions": {
+      "start": "Start",
+      "next": "Next Question",
+      "finish": "Finish",
+      "retry": "Retry",
+      "mainMenu": "Main Menu"
+    },
+    "results": {
+      "congratulations": "Congratulations!",
+      "tryAgain": "Try Again",
+      "completed": "test completed",
+      "points": "Points",
+      "correct": "Correct"
+    },
+    "categories": {
+      "introCpp": "Introduction to C++",
+      "developmentEnvironment": "Development Environment",
+      "cppBasics": "C++ Basics",
+      "iostreamOperations": "Input/Output Operations",
+      "functions": "Functions",
+      "fileOperations": "File I/O",
+      "arrays": "Arrays",
+      "strings": "Strings",
+      "oopBasics": "OOP Fundamentals",
+      "inheritancePolymorphism": "Inheritance & Polymorphism",
+      "templates": "Templates",
+      "stl": "Standard Template Library",
+      "modernCpp": "Modern C++ Features"
+    }
   },
   "home": {
     "title": "CodeMentor AI",
