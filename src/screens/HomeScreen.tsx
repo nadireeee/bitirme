@@ -5,177 +5,80 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Dimensions,
   RefreshControl,
 } from "react-native";
-import {
-  Card,
-  Button,
-  FAB,
-  Portal,
-  Dialog,
-  Paragraph,
-} from "react-native-paper";
+import { Card, Button } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
-import responsive, {
+import {
+  COLORS,
+  TYPOGRAPHY,
+  SPACING,
+  RADIUS,
+  SHADOWS,
   wp,
   hp,
-  typography,
-  spacing,
-  commonStyles,
-  isTablet,
-  isSmallPhone,
-} from "../utils/responsive";
-import SmartSuggestions from "../components/ai/SmartSuggestions";
-import aiService from "../services/aiService";
-
-const colors = {
-  background: "#030712",
-  surface: "#0f172a",
-  text: "#f9fafb",
-  textSecondary: "#94a3b8",
-  outline: "#334155",
-  primary: "#3b82f6",
-  secondary: "#8b5cf6",
-  accent: "#06b6d4",
-  success: "#10b981",
-  warning: "#f59e0b",
-  error: "#ef4444",
-  card: "#0f172a",
-};
-
-const { width, height } = Dimensions.get("window");
+  isSmallDevice,
+} from "../styles/designSystem";
 
 interface QuickAction {
   id: string;
   title: string;
-  titleTR: string;
-  description: string;
-  descriptionTR: string;
   icon: string;
   color: string;
   screen: string;
-  aiPowered?: boolean;
+  params?: any;
 }
 
 const quickActions: QuickAction[] = [
   {
     id: "quiz",
-    title: "Take Quiz",
-    titleTR: "Quiz Çöz",
-    description: "Test your knowledge",
-    descriptionTR: "Bilginizi test edin",
-    icon: "school",
-    color: "#10b981",
+    title: "Quiz",
+    icon: "help-circle",
+    color: COLORS.success,
     screen: "Quiz",
-    aiPowered: true,
   },
   {
     id: "playground",
-    title: "Code Playground",
-    titleTR: "Kod Alanı",
-    description: "Write and test code",
-    descriptionTR: "Kod yazın ve test edin",
+    title: "Kod Editörü",
     icon: "code-slash",
-    color: "#3b82f6",
+    color: COLORS.primary,
     screen: "CodePlayground",
-    aiPowered: true,
   },
   {
     id: "courses",
-    title: "Learn Courses",
-    titleTR: "Kurslar",
-    description: "Structured learning",
-    descriptionTR: "Yapılandırılmış öğrenme",
+    title: "Kurslar",
     icon: "book",
-    color: "#8b5cf6",
-    screen: "Courses",
+    color: COLORS.info,
     screen: "Main",
     params: { screen: "Courses" },
   },
   {
     id: "ai-chat",
-    title: "AI Tutor",
-    titleTR: "AI Öğretmen",
-    description: "Get instant help",
-    descriptionTR: "Anında yardım alın",
+    title: "AI Asistan",
     icon: "sparkles",
-    color: "#06b6d4",
+    color: COLORS.warning,
     screen: "Main",
     params: { screen: "AIChat" },
-    aiPowered: true,
-  },
-  {
-    id: "forum",
-    title: "Community",
-    titleTR: "Topluluk",
-    description: "Join discussions",
-    descriptionTR: "Tartışmalara katılın",
-    icon: "chatbubbles",
-    color: "#f59e0b",
-    screen: "Main",
-    params: { screen: "Forum" },
-  },
-  {
-    id: "progress",
-    title: "Progress",
-    titleTR: "İlerleme",
-    description: "Track your growth",
-    descriptionTR: "Gelişiminizi takip edin",
-    icon: "trending-up",
-    color: "#ef4444",
-    screen: "Progress",
   },
 ];
 
 const HomeScreen = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
-
   const [refreshing, setRefreshing] = useState(false);
-  const [aiStatus, setAiStatus] = useState<"connected" | "disconnected">(
-    "disconnected",
-  );
-  const [showAiDialog, setShowAiDialog] = useState(false);
   const [userStats, setUserStats] = useState({
-    totalQuizzes: 0,
-    averageScore: 0,
-    streakCount: 0,
-    completedCourses: 0,
+    totalQuizzes: 12,
+    averageScore: 85,
+    streakCount: 5,
   });
-
-  useEffect(() => {
-    loadInitialData();
-  }, []);
-
-  const loadInitialData = async () => {
-    try {
-      // Check AI status
-      const status = await aiService.getHealthStatus();
-      setAiStatus(status.status);
-
-      // Load user stats (you'd implement this based on your backend)
-      // const stats = await userService.getUserStats();
-      // setUserStats(stats);
-
-      setUserStats({
-        totalQuizzes: 12,
-        averageScore: 85,
-        streakCount: 5,
-        completedCourses: 3,
-      });
-    } catch (error) {
-      console.warn("Error loading initial data:", error);
-    }
-  };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadInitialData();
-    setRefreshing(false);
+    // Simulate refresh
+    setTimeout(() => setRefreshing(false), 1000);
   };
 
   const handleQuickAction = (action: QuickAction) => {
@@ -186,332 +89,175 @@ const HomeScreen = () => {
     }
   };
 
-  const handleAiFeatureInfo = () => {
-    setShowAiDialog(true);
-  };
-
   return (
     <View style={styles.container}>
       <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
+            colors={[COLORS.primary]}
+            tintColor={COLORS.primary}
           />
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero Section */}
-        <LinearGradient
-          colors={[colors.primary, colors.secondary, colors.accent]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.heroSection}
-        >
-          <View style={styles.heroContent}>
-            <View style={styles.heroText}>
-              <Text style={styles.heroTitle}>CodeMentor AI</Text>
-              <Text style={styles.heroSubtitle}>
-                🤖 AI Destekli C/C++ Öğrenme Platformu
-              </Text>
-              <Text style={styles.heroDescription}>
-                Yapay zeka ile kişiselleştirilmiş öğrenme deneyimi
-              </Text>
+        {/* Header Section */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <View>
+              <Text style={styles.welcomeText}>Merhaba! 👋</Text>
+              <Text style={styles.titleText}>CodeMentor AI</Text>
             </View>
-
             <TouchableOpacity
-              style={styles.aiStatusBadge}
-              onPress={handleAiFeatureInfo}
+              style={styles.profileButton}
+              onPress={() => navigation.navigate("Main", { screen: "Profile" })}
             >
-              <View
-                style={[
-                  styles.aiStatusIndicator,
-                  {
-                    backgroundColor:
-                      aiStatus === "connected"
-                        ? colors.success
-                        : colors.warning,
-                  },
-                ]}
-              />
-              <Text style={styles.aiStatusText}>
-                {aiStatus === "connected" ? "AI Aktif" : "AI Bağlanıyor"}
-              </Text>
-              <Ionicons
-                name="information-circle"
-                size={wp(4)}
-                color={colors.text}
-              />
+              <Ionicons name="person-circle" size={32} color={COLORS.primary} />
             </TouchableOpacity>
           </View>
-        </LinearGradient>
+        </View>
 
-        {/* Stats Cards */}
+        {/* Stats Row */}
         <View style={styles.statsContainer}>
-          <Card style={styles.statCard}>
-            <Card.Content style={styles.statContent}>
-              <Ionicons name="trophy" size={wp(6)} color={colors.warning} />
-              <Text style={styles.statNumber}>{userStats.totalQuizzes}</Text>
-              <Text style={styles.statLabel}>Quiz Tamamlandı</Text>
-            </Card.Content>
-          </Card>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{userStats.totalQuizzes}</Text>
+            <Text style={styles.statLabel}>Quiz</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{userStats.averageScore}%</Text>
+            <Text style={styles.statLabel}>Başarı</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{userStats.streakCount}</Text>
+            <Text style={styles.statLabel}>Seri</Text>
+          </View>
+        </View>
 
-          <Card style={styles.statCard}>
-            <Card.Content style={styles.statContent}>
-              <Ionicons name="star" size={wp(6)} color={colors.success} />
-              <Text style={styles.statNumber}>{userStats.averageScore}%</Text>
-              <Text style={styles.statLabel}>Ortalama Puan</Text>
-            </Card.Content>
-          </Card>
+        {/* Quick Actions */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Hızlı Başlat</Text>
+          <View style={styles.actionsGrid}>
+            {quickActions.map((action) => (
+              <TouchableOpacity
+                key={action.id}
+                style={styles.actionCard}
+                onPress={() => handleQuickAction(action)}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[styles.actionIcon, { backgroundColor: action.color }]}
+                >
+                  <Ionicons
+                    name={action.icon as any}
+                    size={24}
+                    color={COLORS.white}
+                  />
+                </View>
+                <Text style={styles.actionTitle}>{action.title}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
 
-          <Card style={styles.statCard}>
-            <Card.Content style={styles.statContent}>
-              <Ionicons name="flame" size={wp(6)} color={colors.error} />
-              <Text style={styles.statNumber}>{userStats.streakCount}</Text>
-              <Text style={styles.statLabel}>Günlük Seri</Text>
-            </Card.Content>
+        {/* Today's Goal */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Günlük Hedef</Text>
+          <Card style={styles.goalCard}>
+            <View style={styles.goalContent}>
+              <View style={styles.goalInfo}>
+                <Text style={styles.goalTitle}>C++ Fonksiyonları</Text>
+                <Text style={styles.goalSubtitle}>15 dakikalık ders</Text>
+              </View>
+              <TouchableOpacity style={styles.goalButton}>
+                <Ionicons name="play" size={20} color={COLORS.primary} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.progressBar}>
+              <View style={styles.progressFill} />
+            </View>
+            <Text style={styles.progressText}>3/5 tamamlandı</Text>
           </Card>
         </View>
 
-        {/* AI Smart Suggestions */}
-        <SmartSuggestions
-          userLevel="beginner"
-          recentActivity={["variables", "functions"]}
-          onNavigate={(screen: string, params?: any) => {
-            if (params) {
-              navigation.navigate(screen as any, params);
-            } else {
-              navigation.navigate(screen as any);
-            }
-          }}
-        />
+        {/* Continue Learning */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Öğrenmeye Devam Et</Text>
+            <TouchableOpacity>
+              <Text style={styles.seeAllText}>Tümünü Gör</Text>
+            </TouchableOpacity>
+          </View>
 
-        {/* Quick Actions */}
-        <Card style={styles.actionsCard}>
-          <Card.Content style={styles.actionsContent}>
-            <View style={styles.actionsHeader}>
-              <Text style={styles.actionsTitle}>Hızlı Eylemler</Text>
-              <Text style={styles.actionsSubtitle}>
-                Öğrenmeye hemen başlayın
-              </Text>
-            </View>
-
-            <View style={styles.actionsGrid}>
-              {quickActions.map((action) => (
-                <TouchableOpacity
-                  key={action.id}
-                  style={[styles.actionCard, { backgroundColor: action.color }]}
-                  onPress={() => handleQuickAction(action)}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.coursesContainer}
+          >
+            {[1, 2, 3].map((item) => (
+              <Card key={item} style={styles.courseCard}>
+                <LinearGradient
+                  colors={[COLORS.primary, COLORS.info]}
+                  style={styles.courseGradient}
                 >
-                  <LinearGradient
-                    colors={[action.color, `${action.color}CC`]}
-                    style={styles.actionGradient}
-                  >
-                    <View style={styles.actionHeader}>
-                      <Ionicons
-                        name={action.icon as any}
-                        size={wp(6)}
-                        color={colors.text}
-                      />
-                      {action.aiPowered && (
-                        <View style={styles.aiPoweredBadge}>
-                          <Ionicons
-                            name="sparkles"
-                            size={wp(3)}
-                            color={colors.accent}
-                          />
-                        </View>
-                      )}
-                    </View>
-                    <Text style={styles.actionTitle}>{action.titleTR}</Text>
-                    <Text style={styles.actionDescription}>
-                      {action.descriptionTR}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </Card.Content>
-        </Card>
+                  <Text style={styles.courseTitle}>C++ Temelleri</Text>
+                  <Text style={styles.courseProgress}>Bölüm {item}/10</Text>
+                </LinearGradient>
+              </Card>
+            ))}
+          </ScrollView>
+        </View>
 
         {/* Recent Activity */}
-        <Card style={styles.activityCard}>
-          <Card.Content style={styles.activityContent}>
-            <View style={styles.activityHeader}>
-              <Ionicons name="time" size={wp(5)} color={colors.accent} />
-              <Text style={styles.activityTitle}>Son Aktiviteler</Text>
-            </View>
-
-            <View style={styles.activityList}>
-              <View style={styles.activityItem}>
-                <View style={styles.activityIcon}>
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={wp(4)}
-                    color={colors.success}
-                  />
-                </View>
-                <View style={styles.activityInfo}>
-                  <Text style={styles.activityText}>
-                    C++ Temelleri quizi tamamlandı
-                  </Text>
-                  <Text style={styles.activityTime}>2 saat önce</Text>
-                </View>
-              </View>
-
-              <View style={styles.activityItem}>
-                <View style={styles.activityIcon}>
-                  <Ionicons
-                    name="code-slash"
-                    size={wp(4)}
-                    color={colors.primary}
-                  />
-                </View>
-                <View style={styles.activityInfo}>
-                  <Text style={styles.activityText}>
-                    Hello World programı çalıştırıldı
-                  </Text>
-                  <Text style={styles.activityTime}>5 saat önce</Text>
-                </View>
-              </View>
-
-              <View style={styles.activityItem}>
-                <View style={styles.activityIcon}>
-                  <Ionicons
-                    name="sparkles"
-                    size={wp(4)}
-                    color={colors.accent}
-                  />
-                </View>
-                <View style={styles.activityInfo}>
-                  <Text style={styles.activityText}>
-                    AI asistanından değişkenler hakkında yardım alındı
-                  </Text>
-                  <Text style={styles.activityTime}>1 gün önce</Text>
-                </View>
-              </View>
-            </View>
-          </Card.Content>
-        </Card>
-
-        {/* Learning Path */}
-        <Card style={styles.pathCard}>
-          <Card.Content style={styles.pathContent}>
-            <View style={styles.pathHeader}>
-              <LinearGradient
-                colors={[colors.secondary, colors.primary]}
-                style={styles.pathIcon}
-              >
-                <Ionicons name="map" size={wp(5)} color={colors.text} />
-              </LinearGradient>
-              <View style={styles.pathText}>
-                <Text style={styles.pathTitle}>Öğrenme Yolunuz</Text>
-                <Text style={styles.pathSubtitle}>
-                  C++ ustası olmaya giden yol
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.pathProgress}>
-              <View style={styles.pathStep}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Son Aktiviteler</Text>
+          <View style={styles.activityList}>
+            {[
+              {
+                icon: "checkmark-circle",
+                text: "Variables quiz tamamlandı",
+                time: "2s önce",
+                color: COLORS.success,
+              },
+              {
+                icon: "code-slash",
+                text: "Hello World yazdın",
+                time: "1s önce",
+                color: COLORS.primary,
+              },
+              {
+                icon: "sparkles",
+                text: "AI'dan yardım aldın",
+                time: "5d önce",
+                color: COLORS.warning,
+              },
+            ].map((activity, index) => (
+              <View key={index} style={styles.activityItem}>
                 <View
                   style={[
-                    styles.pathStepIcon,
-                    { backgroundColor: colors.success },
+                    styles.activityIcon,
+                    { backgroundColor: activity.color },
                   ]}
                 >
-                  <Ionicons name="checkmark" size={wp(4)} color={colors.text} />
+                  <Ionicons
+                    name={activity.icon as any}
+                    size={16}
+                    color={COLORS.white}
+                  />
                 </View>
-                <Text style={styles.pathStepText}>Temel Kavramlar ✓</Text>
-              </View>
-
-              <View style={styles.pathConnector} />
-
-              <View style={styles.pathStep}>
-                <View
-                  style={[
-                    styles.pathStepIcon,
-                    { backgroundColor: colors.primary },
-                  ]}
-                >
-                  <Text style={styles.pathStepNumber}>2</Text>
+                <View style={styles.activityContent}>
+                  <Text style={styles.activityText}>{activity.text}</Text>
+                  <Text style={styles.activityTime}>{activity.time}</Text>
                 </View>
-                <Text style={styles.pathStepText}>Fonksiyonlar (Aktif)</Text>
               </View>
-
-              <View style={styles.pathConnector} />
-
-              <View style={styles.pathStep}>
-                <View
-                  style={[
-                    styles.pathStepIcon,
-                    { backgroundColor: colors.outline },
-                  ]}
-                >
-                  <Text style={styles.pathStepNumber}>3</Text>
-                </View>
-                <Text style={styles.pathStepText}>Nesne Yönelimli</Text>
-              </View>
-            </View>
-
-            <Button
-              mode="contained"
-              onPress={() => navigation.navigate("Main", { screen: "Courses" })}
-              style={styles.pathButton}
-              contentStyle={styles.pathButtonContent}
-            >
-              Devam Et
-            </Button>
-          </Card.Content>
-        </Card>
+            ))}
+          </View>
+        </View>
       </ScrollView>
-
-      {/* AI Feature Info Dialog */}
-      <Portal>
-        <Dialog visible={showAiDialog} onDismiss={() => setShowAiDialog(false)}>
-          <Dialog.Title>🤖 AI Özellikleri</Dialog.Title>
-          <Dialog.Content>
-            <Paragraph style={styles.dialogText}>
-              CodeMentor AI, öğrenme deneyiminizi geliştirmek için yapay zeka
-              kullanır:
-            </Paragraph>
-            <View style={styles.featureList}>
-              <Text style={styles.featureItem}>
-                ✨ Akıllı kod analizi ve öneriler
-              </Text>
-              <Text style={styles.featureItem}>
-                🎯 Kişiselleştirilmiş quiz ipuçları
-              </Text>
-              <Text style={styles.featureItem}>
-                📚 Otomatik konu açıklamaları
-              </Text>
-              <Text style={styles.featureItem}>
-                🚀 Hızlı problem çözme yardımı
-              </Text>
-              <Text style={styles.featureItem}>
-                📈 Akıllı öğrenme önerileri
-              </Text>
-            </View>
-            <Paragraph style={styles.dialogText}>
-              Durum: {aiStatus === "connected" ? "🟢 Aktif" : "🟡 Bağlanıyor"}
-            </Paragraph>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setShowAiDialog(false)}>Tamam</Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
-
-      {/* Floating AI Assistant Button */}
-      <FAB
-        icon="sparkles"
-        style={styles.aiFab}
-        onPress={() => navigation.navigate("Main", { screen: "AIChat" })}
-        label={aiStatus === "connected" ? "AI Asistan" : "AI"}
-      />
     </View>
   );
 };
@@ -519,295 +265,222 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: COLORS.background,
+  },
+  scrollView: {
+    flex: 1,
   },
   scrollContent: {
-    paddingBottom: spacing.xxxl,
+    paddingBottom: SPACING[20],
   },
-  heroSection: {
-    padding: spacing.lg,
-    paddingTop: spacing.xl,
-    borderBottomLeftRadius: spacing.xl,
-    borderBottomRightRadius: spacing.xl,
+  header: {
+    paddingHorizontal: SPACING[4],
+    paddingTop: SPACING[8],
+    paddingBottom: SPACING[6],
   },
-  heroContent: {
-    alignItems: "center",
-  },
-  heroText: {
-    alignItems: "center",
-    marginBottom: spacing.lg,
-  },
-  heroTitle: {
-    fontSize: isTablet() ? typography.h1 : typography.h2,
-    fontWeight: "800",
-    color: colors.text,
-    marginBottom: spacing.xs,
-    textAlign: "center",
-  },
-  heroSubtitle: {
-    fontSize: isTablet() ? typography.h5 : typography.h6,
-    fontWeight: "600",
-    color: colors.text,
-    marginBottom: spacing.sm,
-    textAlign: "center",
-  },
-  heroDescription: {
-    fontSize: typography.body1,
-    color: colors.text,
-    textAlign: "center",
-    opacity: 0.9,
-  },
-  aiStatusBadge: {
+  headerContent: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderRadius: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    gap: spacing.sm,
   },
-  aiStatusIndicator: {
-    width: wp(2),
-    height: wp(2),
-    borderRadius: wp(1),
+  welcomeText: {
+    fontSize: TYPOGRAPHY.base,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING[1],
   },
-  aiStatusText: {
-    fontSize: typography.body2,
-    color: colors.text,
-    fontWeight: "500",
+  titleText: {
+    fontSize: TYPOGRAPHY["3xl"],
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.text,
+  },
+  profileButton: {
+    padding: SPACING[1],
   },
   statsContainer: {
     flexDirection: "row",
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.lg,
-    gap: spacing.sm,
+    marginHorizontal: SPACING[4],
+    marginBottom: SPACING[8],
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    paddingVertical: SPACING[4],
+    ...SHADOWS.sm,
   },
-  statCard: {
+  statItem: {
     flex: 1,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.outline,
-  },
-  statContent: {
     alignItems: "center",
-    padding: spacing.md,
+  },
+  statDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: COLORS.border,
   },
   statNumber: {
-    fontSize: typography.h4,
-    fontWeight: "700",
-    color: colors.text,
-    marginVertical: spacing.xs,
+    fontSize: TYPOGRAPHY["2xl"],
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.text,
+    marginBottom: SPACING[1],
   },
   statLabel: {
-    fontSize: typography.caption,
-    color: colors.textSecondary,
-    textAlign: "center",
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.textSecondary,
   },
-  actionsCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.outline,
-    borderRadius: spacing.md,
-    margin: spacing.md,
+  section: {
+    marginBottom: SPACING[8],
+    paddingHorizontal: SPACING[4],
   },
-  actionsContent: {
-    padding: spacing.lg,
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: SPACING[4],
   },
-  actionsHeader: {
-    marginBottom: spacing.lg,
+  sectionTitle: {
+    fontSize: TYPOGRAPHY.xl,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    color: COLORS.text,
+    marginBottom: SPACING[4],
   },
-  actionsTitle: {
-    fontSize: isTablet() ? typography.h4 : typography.h5,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: spacing.xs,
-  },
-  actionsSubtitle: {
-    fontSize: typography.body2,
-    color: colors.textSecondary,
+  seeAllText: {
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.primary,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
   actionsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.md,
+    gap: SPACING[3],
   },
   actionCard: {
-    width: (width - spacing.md * 3 - spacing.lg * 2) / 2,
-    borderRadius: spacing.md,
-    overflow: "hidden",
-  },
-  actionGradient: {
-    padding: spacing.md,
-    minHeight: hp(15),
-    justifyContent: "space-between",
-  },
-  actionHeader: {
-    flexDirection: "row",
+    width: (wp(100) - SPACING[4] * 2 - SPACING[3]) / 2,
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    padding: SPACING[4],
     alignItems: "center",
-    marginBottom: spacing.sm,
+    ...SHADOWS.sm,
   },
-  aiPoweredBadge: {
-    backgroundColor: "rgba(6, 182, 212, 0.3)",
-    borderRadius: wp(2),
-    padding: spacing.xs,
-    marginLeft: spacing.xs,
+  actionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: SPACING[3],
   },
   actionTitle: {
-    fontSize: typography.h6,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: spacing.xs,
+    fontSize: TYPOGRAPHY.sm,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
+    color: COLORS.text,
+    textAlign: "center",
   },
-  actionDescription: {
-    fontSize: typography.body2,
-    color: colors.text,
+  goalCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    padding: SPACING[4],
+    ...SHADOWS.sm,
+  },
+  goalContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: SPACING[3],
+  },
+  goalInfo: {
+    flex: 1,
+  },
+  goalTitle: {
+    fontSize: TYPOGRAPHY.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    color: COLORS.text,
+    marginBottom: SPACING[1],
+  },
+  goalSubtitle: {
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.textSecondary,
+  },
+  goalButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: COLORS.border,
+    borderRadius: 3,
+    marginBottom: SPACING[2],
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    width: "60%",
+    backgroundColor: COLORS.primary,
+    borderRadius: 3,
+  },
+  progressText: {
+    fontSize: TYPOGRAPHY.xs,
+    color: COLORS.textSecondary,
+    textAlign: "center",
+  },
+  coursesContainer: {
+    paddingRight: SPACING[4],
+  },
+  courseCard: {
+    width: wp(70),
+    marginRight: SPACING[3],
+    borderRadius: RADIUS.lg,
+    overflow: "hidden",
+    ...SHADOWS.sm,
+  },
+  courseGradient: {
+    padding: SPACING[4],
+    height: 100,
+    justifyContent: "space-between",
+  },
+  courseTitle: {
+    fontSize: TYPOGRAPHY.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    color: COLORS.white,
+  },
+  courseProgress: {
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.white,
     opacity: 0.9,
   },
-  activityCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.outline,
-    borderRadius: spacing.md,
-    margin: spacing.md,
-  },
-  activityContent: {
-    padding: spacing.lg,
-  },
-  activityHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: spacing.lg,
-    gap: spacing.sm,
-  },
-  activityTitle: {
-    fontSize: typography.h6,
-    fontWeight: "700",
-    color: colors.text,
-  },
   activityList: {
-    gap: spacing.md,
+    gap: SPACING[3],
   },
   activityItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
+    backgroundColor: COLORS.surface,
+    padding: SPACING[3],
+    borderRadius: RADIUS.base,
+    ...SHADOWS.sm,
   },
   activityIcon: {
-    width: wp(8),
-    height: wp(8),
-    borderRadius: wp(4),
-    backgroundColor: colors.background,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
+    marginRight: SPACING[3],
   },
-  activityInfo: {
+  activityContent: {
     flex: 1,
   },
   activityText: {
-    fontSize: typography.body2,
-    color: colors.text,
-    fontWeight: "500",
-    marginBottom: spacing.xs,
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.text,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
+    marginBottom: SPACING[1],
   },
   activityTime: {
-    fontSize: typography.caption,
-    color: colors.textSecondary,
-  },
-  pathCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.outline,
-    borderRadius: spacing.md,
-    margin: spacing.md,
-  },
-  pathContent: {
-    padding: spacing.lg,
-  },
-  pathHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: spacing.lg,
-  },
-  pathIcon: {
-    width: wp(10),
-    height: wp(10),
-    borderRadius: wp(5),
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: spacing.md,
-  },
-  pathText: {
-    flex: 1,
-  },
-  pathTitle: {
-    fontSize: typography.h6,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: spacing.xs,
-  },
-  pathSubtitle: {
-    fontSize: typography.body2,
-    color: colors.textSecondary,
-  },
-  pathProgress: {
-    marginBottom: spacing.lg,
-  },
-  pathStep: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: spacing.sm,
-  },
-  pathStepIcon: {
-    width: wp(8),
-    height: wp(8),
-    borderRadius: wp(4),
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: spacing.md,
-  },
-  pathStepNumber: {
-    fontSize: typography.body2,
-    fontWeight: "700",
-    color: colors.text,
-  },
-  pathStepText: {
-    fontSize: typography.body2,
-    color: colors.text,
-    fontWeight: "500",
-  },
-  pathConnector: {
-    width: 2,
-    height: spacing.md,
-    backgroundColor: colors.outline,
-    marginLeft: wp(4) - 1,
-    marginBottom: spacing.sm,
-  },
-  pathButton: {
-    backgroundColor: colors.primary,
-    borderRadius: spacing.sm,
-  },
-  pathButtonContent: {
-    paddingVertical: spacing.sm,
-  },
-  dialogText: {
-    fontSize: typography.body2,
-    color: colors.textSecondary,
-    marginBottom: spacing.md,
-  },
-  featureList: {
-    marginBottom: spacing.md,
-  },
-  featureItem: {
-    fontSize: typography.body2,
-    color: colors.text,
-    marginBottom: spacing.xs,
-    paddingLeft: spacing.sm,
-  },
-  aiFab: {
-    position: "absolute",
-    bottom: spacing.xl,
-    right: spacing.lg,
-    backgroundColor: colors.accent,
+    fontSize: TYPOGRAPHY.xs,
+    color: COLORS.textSecondary,
   },
 });
 
