@@ -880,9 +880,13 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#f9fafb",
     marginLeft: spacing.sm,
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
+    ...(Platform.OS === "ios" || Platform.OS === "android"
+      ? {
+          textShadowColor: "rgba(0, 0, 0, 0.3)",
+          textShadowOffset: { width: 1, height: 1 },
+          textShadowRadius: 3,
+        }
+      : {}),
   },
   notificationButton: {
     padding: spacing.xs,
