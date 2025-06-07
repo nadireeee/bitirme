@@ -116,9 +116,9 @@ function MainTabs() {
         options={{ title: t("navigation.courses") }}
       />
       <Tab.Screen
-        name="Exercises"
-        component={ExercisesScreen}
-        options={{ title: t("navigation.exercises") }}
+        name="Forum"
+        component={ForumScreen}
+        options={{ title: t("navigation.forum") }}
       />
       <Tab.Screen
         name="AIChat"
