@@ -27,6 +27,27 @@ services:
     networks:
       - codementor_network
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: codementor_ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    networks:
+      - codementor_network
+    # For GPU support (uncomment if you have NVIDIA GPU)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
   backend:
     build:
       context: .
@@ -36,6 +57,8 @@ services:
     environment:
       DATABASE_URL: postgresql://codementor:codementor123@postgres:5432/codementor_ai
       REDIS_URL: redis://redis:6379
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: mistral
       JWT_SECRET: your-super-secret-jwt-key-here
       JWT_EXPIRES_IN: 7d
       NODE_ENV: development
@@ -45,6 +68,7 @@ services:
     depends_on:
       - postgres
       - redis
+      - ollama
     volumes:
       - .:/app
       - /app/node_modules
@@ -65,9 +89,28 @@ services:
     networks:
       - codementor_network
 
+  # Ollama Web UI (Optional - for easy model management)
+  ollama-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: codementor_ollama_webui
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - WEBUI_SECRET_KEY=your-secret-key-here
+    volumes:
+      - ollama_webui_data:/app/backend/data
+    depends_on:
+      - ollama
+    networks:
+      - codementor_network
+
 volumes:
   postgres_data:
   redis_data:
+  ollama_data:
+  ollama_webui_data:
 
 networks:
   codementor_network:
