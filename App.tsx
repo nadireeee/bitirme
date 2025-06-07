@@ -7,7 +7,7 @@ import { PaperProvider, MD3DarkTheme } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
-import { AppRegistry } from "react-native";
+import { registerRootComponent } from "expo";
 
 import type {
   RootStackParamList,
