@@ -222,5 +222,5 @@ export default function App() {
   );
 }
 
-// Register the main component
-AppRegistry.registerComponent("main", () => App);
+// Register the main component with Expo
+registerRootComponent(App);
