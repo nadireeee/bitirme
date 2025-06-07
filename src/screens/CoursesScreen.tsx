@@ -377,24 +377,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#030712",
   },
   header: {
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-    paddingTop: 40,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl,
+    paddingTop: isTablet() ? spacing.xl : spacing.xxl,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: isTablet() ? typography.h1 : typography.h2,
     fontWeight: "700",
     color: "#f9fafb",
-    marginBottom: 8,
+    marginBottom: spacing.xs,
   },
   headerSubtitle: {
-    fontSize: 16,
+    fontSize: isTablet() ? typography.h6 : typography.body1,
     color: "#64748b",
-    lineHeight: 24,
+    lineHeight: isTablet() ? typography.h6 * 1.4 : typography.body1 * 1.5,
   },
   filtersContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
   },
   searchContainer: {
     flexDirection: "row",
