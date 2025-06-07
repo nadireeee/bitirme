@@ -35,7 +35,7 @@ const { width, height } = Dimensions.get("window");
 const HomeScreen = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const colors = useSafeColors();
 
   // Animation values
   const [fadeAnim] = useState(new Animated.Value(0));
