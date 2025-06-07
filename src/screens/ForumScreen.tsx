@@ -98,387 +98,178 @@ const ForumScreen = () => {
       views: 89,
       replies: 7,
       likes: 15,
-      timeAgo: "4 saat önce",
+      timeAgo: "5 saat önce",
       isAnswered: false,
       isPinned: true,
     },
-    {
-      id: 3,
-      title: "Pointer vs Reference - Ne zaman hangisini kullanmalı?",
-      content:
-        "C++ da pointer ve reference arasındaki farkları ve hangi durumlarda hangisini kullanmamız gerektiğini açıklayabilir misiniz?",
-      author: "LearnCoding",
-      authorAvatar: "https://i.pravatar.cc/100?img=4",
-      category: "beginners",
-      tags: ["pointers", "references", "basics"],
-      views: 234,
-      replies: 18,
-      likes: 41,
-      timeAgo: "6 saat önce",
-      isAnswered: true,
-      isPinned: false,
-    },
-    {
-      id: 4,
-      title: "Oyun geliştirme projesi - takım arkadaşı arıyorum",
-      content:
-        "C++ ile 2D platform oyunu geliştiriyorum. SFML kullanan ve birlikte çalışmak isteyen var mı?",
-      author: "GameDev2024",
-      authorAvatar: "https://i.pravatar.cc/100?img=5",
-      category: "projects",
-      tags: ["game-dev", "sfml", "collaboration"],
-      views: 67,
-      replies: 9,
-      likes: 12,
-      timeAgo: "8 saat önce",
-      isAnswered: false,
-      isPinned: false,
-    },
-    {
-      id: 5,
-      title: "Memory leak nasıl tespit edilir?",
-      content:
-        "Programımda memory leak olduğunu fark ettim ama nerede olduğunu bulamıyorum. Hangi araçları kullanabilirim?",
-      author: "DebugMaster",
-      authorAvatar: "https://i.pravatar.cc/100?img=6",
-      category: "help",
-      tags: ["memory", "debugging", "tools"],
-      views: 145,
-      replies: 14,
-      likes: 28,
-      timeAgo: "1 gün önce",
-      isAnswered: true,
-      isPinned: false,
-    },
   ];
 
-  const filteredPosts = forumPosts.filter((post) => {
-    const matchesCategory =
-      selectedCategory === "all" || post.category === selectedCategory;
-    const matchesSearch =
-      searchQuery === "" ||
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.tags.some((tag) =>
-        tag.toLowerCase().includes(searchQuery.toLowerCase()),
-      );
+  const filteredPosts =
+    selectedCategory === "all"
+      ? forumPosts
+      : forumPosts.filter((post) => post.category === selectedCategory);
 
-    return matchesCategory && matchesSearch;
-  });
+  const renderPost = (post: any) => (
+    <Card key={post.id} style={styles.postCard}>
+      <Card.Content>
+        <View style={styles.postHeader}>
+          <View style={styles.postMeta}>
+            <Avatar.Image
+              size={isTablet() ? 48 : 40}
+              source={{ uri: post.authorAvatar }}
+            />
+            <View style={styles.postMetaText}>
+              <Text style={styles.postAuthor}>{post.author}</Text>
+              <Text style={styles.postTime}>{post.timeAgo}</Text>
+            </View>
+          </View>
+          <View style={styles.postActions}>
+            {post.isPinned && <Ionicons name="pin" size={16} color="#f59e0b" />}
+            {post.isAnswered && (
+              <Ionicons name="checkmark-circle" size={16} color="#10b981" />
+            )}
+          </View>
+        </View>
 
-  const getCategoryColor = (categoryId: string) => {
-    const colorMap = {
-      cpp: colors.primary,
-      algorithms: colors.secondary,
-      beginners: colors.success,
-      projects: colors.warning,
-      help: colors.error,
-    };
-    return colorMap[categoryId] || colors.textSecondary;
-  };
+        <Text style={styles.postTitle}>{post.title}</Text>
+        <Text style={styles.postContent}>{post.content}</Text>
 
-  const getTimeAgoColor = (timeAgo: string) => {
-    if (timeAgo.includes("saat")) return colors.success;
-    if (timeAgo.includes("gün")) return colors.warning;
-    return colors.textSecondary;
-  };
+        <View style={styles.postTags}>
+          {post.tags.map((tag: string, index: number) => (
+            <Chip
+              key={index}
+              mode="outlined"
+              style={styles.tagChip}
+              textStyle={styles.tagText}
+            >
+              {tag}
+            </Chip>
+          ))}
+        </View>
+
+        <View style={styles.postStats}>
+          <View style={styles.stat}>
+            <Ionicons name="eye-outline" size={16} color="#64748b" />
+            <Text style={styles.statText}>{post.views}</Text>
+          </View>
+          <View style={styles.stat}>
+            <Ionicons name="chatbubble-outline" size={16} color="#64748b" />
+            <Text style={styles.statText}>{post.replies}</Text>
+          </View>
+          <View style={styles.stat}>
+            <Ionicons name="heart-outline" size={16} color="#64748b" />
+            <Text style={styles.statText}>{post.likes}</Text>
+          </View>
+        </View>
+      </Card.Content>
+    </Card>
+  );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Responsive Background Shapes */}
+    <View style={styles.container}>
+      {/* Animated Background */}
       <View style={styles.backgroundContainer}>
-        <View
-          style={[
-            styles.backgroundShape1,
-            { backgroundColor: `${colors.primary}08` },
-          ]}
-        />
-        <View
-          style={[
-            styles.backgroundShape2,
-            { backgroundColor: `${colors.secondary}06` },
-          ]}
-        />
-        <View
-          style={[
-            styles.backgroundShape3,
-            { backgroundColor: `${colors.warning}04` },
-          ]}
-        />
+        <View style={styles.backgroundShape1} />
+        <View style={styles.backgroundShape2} />
+        <View style={styles.backgroundShape3} />
       </View>
 
       {/* Header */}
-      <LinearGradient
-        colors={[colors.primary, colors.secondary]}
-        style={styles.header}
-      >
+      <LinearGradient colors={["#3b82f6", "#8b5cf6"]} style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>
-            {t("forum.title", "Topluluk Forum")}
+            {t("forum.title", "Topluluk Forumu")}
           </Text>
           <Text style={styles.headerSubtitle}>
-            {t(
-              "forum.subtitle",
-              "Sorularınızı sorun, deneyimlerinizi paylaşın",
-            )}
+            {t("forum.subtitle", "C ve C++ geliştiricileri ile bilgi paylaşın")}
           </Text>
         </View>
       </LinearGradient>
 
-      {/* Search Bar */}
+      {/* Search */}
       <View style={styles.searchContainer}>
-        <View
-          style={[
-            styles.searchBar,
-            { backgroundColor: colors.card, borderColor: colors.border },
-          ]}
-        >
-          <Ionicons name="search" size={20} color={colors.textSecondary} />
+        <View style={[styles.searchBar, { backgroundColor: colors.surface }]}>
+          <Ionicons name="search" size={20} color="#64748b" />
           <TextInput
             style={[styles.searchInput, { color: colors.text }]}
             placeholder={t("forum.searchPlaceholder", "Forum'da ara...")}
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor="#64748b"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
-          {searchQuery ? (
-            <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Ionicons name="close" size={20} color={colors.textSecondary} />
-            </TouchableOpacity>
-          ) : null}
         </View>
       </View>
 
       {/* Categories */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoriesContainer}
-        contentContainerStyle={styles.categoriesContent}
-      >
-        {categories.map((category) => (
-          <TouchableOpacity
-            key={category.id}
-            style={[
-              styles.categoryChip,
-              {
-                backgroundColor:
-                  selectedCategory === category.id
-                    ? colors.primary
-                    : colors.card,
-              },
-              {
-                borderColor:
-                  selectedCategory === category.id
-                    ? colors.primary
-                    : colors.border,
-              },
-            ]}
-            onPress={() => setSelectedCategory(category.id)}
-          >
-            <Ionicons
-              name={category.icon as any}
-              size={16}
-              color={
-                selectedCategory === category.id
-                  ? "white"
-                  : colors.textSecondary
-              }
-            />
-            <Text
+      <View style={styles.categoriesContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoriesContent}
+        >
+          {categories.map((category) => (
+            <TouchableOpacity
+              key={category.id}
               style={[
-                styles.categoryText,
+                styles.categoryChip,
                 {
-                  color:
-                    selectedCategory === category.id ? "white" : colors.text,
-                },
-              ]}
-            >
-              {category.name}
-            </Text>
-            <Text
-              style={[
-                styles.categoryCount,
-                {
-                  color:
+                  backgroundColor:
                     selectedCategory === category.id
-                      ? "rgba(255,255,255,0.8)"
-                      : colors.textSecondary,
+                      ? "#3b82f6"
+                      : colors.surface,
                 },
               ]}
+              onPress={() => setSelectedCategory(category.id)}
             >
-              {category.count}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+              <Ionicons
+                name={category.icon as any}
+                size={16}
+                color={selectedCategory === category.id ? "white" : colors.text}
+              />
+              <Text
+                style={[
+                  styles.categoryText,
+                  {
+                    color:
+                      selectedCategory === category.id ? "white" : colors.text,
+                  },
+                ]}
+              >
+                {category.name}
+              </Text>
+              <View
+                style={[
+                  styles.categoryBadge,
+                  {
+                    backgroundColor:
+                      selectedCategory === category.id
+                        ? "rgba(255,255,255,0.2)"
+                        : "#3b82f6",
+                  },
+                ]}
+              >
+                <Text style={styles.categoryBadgeText}>{category.count}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
 
-      {/* Forum Posts */}
+      {/* Posts */}
       <ScrollView
         style={styles.postsContainer}
         showsVerticalScrollIndicator={false}
       >
-        {filteredPosts.map((post) => (
-          <Card
-            key={post.id}
-            style={[
-              styles.postCard,
-              { backgroundColor: colors.card },
-              post.isPinned && {
-                borderLeftWidth: 4,
-                borderLeftColor: colors.warning,
-              },
-            ]}
-          >
-            <Card.Content style={styles.postContent}>
-              {/* Post Header */}
-              <View style={styles.postHeader}>
-                <Avatar.Image size={40} source={{ uri: post.authorAvatar }} />
-                <View style={styles.postAuthorInfo}>
-                  <View style={styles.authorLine}>
-                    <Text style={[styles.authorName, { color: colors.text }]}>
-                      {post.author}
-                    </Text>
-                    {post.isPinned && (
-                      <Ionicons name="pin" size={14} color={colors.warning} />
-                    )}
-                    {post.isAnswered && (
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={14}
-                        color={colors.success}
-                      />
-                    )}
-                  </View>
-                  <Text
-                    style={[
-                      styles.postTime,
-                      { color: getTimeAgoColor(post.timeAgo) },
-                    ]}
-                  >
-                    {post.timeAgo}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Post Title */}
-              <TouchableOpacity
-                style={styles.postTitleContainer}
-                onPress={() => {
-                  // Navigate to post detail
-                }}
-              >
-                <Text style={[styles.postTitle, { color: colors.text }]}>
-                  {post.title}
-                </Text>
-              </TouchableOpacity>
-
-              {/* Post Content Preview */}
-              <Text
-                style={[
-                  styles.postContentPreview,
-                  { color: colors.textSecondary },
-                ]}
-              >
-                {post.content}
-              </Text>
-
-              {/* Tags */}
-              <View style={styles.tagsContainer}>
-                {post.tags.map((tag, index) => (
-                  <Chip
-                    key={index}
-                    mode="outlined"
-                    style={[styles.tagChip, { borderColor: colors.border }]}
-                    textStyle={[
-                      styles.tagText,
-                      { color: colors.textSecondary },
-                    ]}
-                  >
-                    #{tag}
-                  </Chip>
-                ))}
-              </View>
-
-              {/* Post Stats */}
-              <View style={styles.postStats}>
-                <View style={styles.leftStats}>
-                  <View style={styles.statItem}>
-                    <Ionicons
-                      name="eye"
-                      size={14}
-                      color={colors.textSecondary}
-                    />
-                    <Text
-                      style={[styles.statText, { color: colors.textSecondary }]}
-                    >
-                      {post.views}
-                    </Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Ionicons
-                      name="chatbubble"
-                      size={14}
-                      color={colors.textSecondary}
-                    />
-                    <Text
-                      style={[styles.statText, { color: colors.textSecondary }]}
-                    >
-                      {post.replies}
-                    </Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Ionicons name="heart" size={14} color={colors.error} />
-                    <Text
-                      style={[styles.statText, { color: colors.textSecondary }]}
-                    >
-                      {post.likes}
-                    </Text>
-                  </View>
-                </View>
-                <Chip
-                  mode="outlined"
-                  style={[
-                    styles.categoryBadge,
-                    { borderColor: getCategoryColor(post.category) },
-                  ]}
-                  textStyle={[
-                    styles.categoryBadgeText,
-                    { color: getCategoryColor(post.category) },
-                  ]}
-                >
-                  {categories.find((c) => c.id === post.category)?.name ||
-                    post.category}
-                </Chip>
-              </View>
-            </Card.Content>
-          </Card>
-        ))}
-
-        {filteredPosts.length === 0 && (
-          <Card style={[styles.emptyCard, { backgroundColor: colors.card }]}>
-            <Card.Content style={styles.emptyContent}>
-              <Ionicons name="search" size={48} color={colors.textSecondary} />
-              <Text style={[styles.emptyTitle, { color: colors.text }]}>
-                {t("forum.noResults", "Sonuç bulunamadı")}
-              </Text>
-              <Text style={[styles.emptyDesc, { color: colors.textSecondary }]}>
-                {t(
-                  "forum.noResultsDesc",
-                  "Arama kriterlerinizi değiştirerek tekrar deneyin",
-                )}
-              </Text>
-            </Card.Content>
-          </Card>
-        )}
+        {filteredPosts.map(renderPost)}
       </ScrollView>
 
       {/* Floating Action Button */}
       <FAB
-        style={[styles.fab, { backgroundColor: colors.primary }]}
+        style={[styles.fab, { backgroundColor: "#3b82f6" }]}
         icon="plus"
+        color="white"
         onPress={() => {
-          // Navigate to create post
+          // Navigate to create post screen
         }}
       />
     </View>
@@ -488,6 +279,7 @@ const ForumScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#030712",
   },
   backgroundContainer: {
     position: "absolute",
@@ -499,210 +291,222 @@ const styles = StyleSheet.create({
   },
   backgroundShape1: {
     position: "absolute",
-    width: isTablet ? 400 : 300,
-    height: isTablet ? 400 : 300,
-    borderRadius: isTablet ? 200 : 150,
-    top: -100,
-    right: -100,
+    width: wp(100),
+    height: wp(100),
+    backgroundColor: "rgba(59, 130, 246, 0.03)",
+    borderRadius: wp(50),
+    top: -wp(25),
+    right: -wp(25),
   },
   backgroundShape2: {
     position: "absolute",
-    width: isTablet ? 300 : 200,
-    height: isTablet ? 300 : 200,
-    borderRadius: isTablet ? 150 : 100,
-    bottom: 200,
-    left: -50,
+    width: wp(75),
+    height: wp(75),
+    backgroundColor: "rgba(139, 92, 246, 0.02)",
+    borderRadius: wp(37.5),
+    top: hp(50),
+    right: -wp(30),
   },
   backgroundShape3: {
     position: "absolute",
-    width: isTablet ? 200 : 150,
-    height: isTablet ? 200 : 150,
-    borderRadius: isTablet ? 100 : 75,
-    top: height * 0.5,
-    right: -30,
+    width: wp(60),
+    height: wp(60),
+    backgroundColor: "rgba(16, 185, 129, 0.02)",
+    borderRadius: wp(30),
+    bottom: hp(20),
+    left: -wp(15),
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 30,
-    paddingHorizontal: isSmallPhone() ? 20 : isTablet() ? 40 : 30,
+    paddingTop: isTablet() ? spacing.xl : spacing.xxl + 20,
+    paddingBottom: spacing.xl,
+    paddingHorizontal: isSmallPhone()
+      ? spacing.lg
+      : isTablet()
+        ? spacing.xxl
+        : spacing.xl,
   },
   headerContent: {
     alignItems: "center",
-    maxWidth: isTablet ? 600 : "100%",
+    maxWidth: isTablet() ? wp(80) : "100%",
     alignSelf: "center",
   },
   headerTitle: {
-    fontSize: isMobile ? 24 : isTablet ? 32 : 28,
+    fontSize: isSmallPhone()
+      ? typography.h3
+      : isTablet()
+        ? typography.h1
+        : typography.h2,
     fontWeight: "700",
     color: "white",
-    marginBottom: 4,
+    marginBottom: spacing.xs,
     textAlign: "center",
   },
   headerSubtitle: {
-    fontSize: isMobile ? 14 : isTablet ? 18 : 16,
+    fontSize: isSmallPhone()
+      ? typography.body2
+      : isTablet()
+        ? typography.h6
+        : typography.body1,
     color: "rgba(255, 255, 255, 0.8)",
     textAlign: "center",
-    maxWidth: isTablet ? 500 : "90%",
+    maxWidth: isTablet() ? wp(60) : "90%",
   },
   searchContainer: {
-    paddingHorizontal: isMobile ? 20 : isTablet ? 40 : 30,
-    paddingVertical: 15,
-    marginTop: -15,
-    maxWidth: isTablet ? 600 : "100%",
+    paddingHorizontal: isSmallPhone()
+      ? spacing.lg
+      : isTablet()
+        ? spacing.xxl
+        : spacing.xl,
+    paddingVertical: spacing.md,
+    marginTop: -spacing.md,
+    maxWidth: isTablet() ? wp(80) : "100%",
     alignSelf: "center",
     width: "100%",
   },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: spacing.sm,
     borderWidth: 1,
+    borderColor: "#334155",
   },
   searchInput: {
     flex: 1,
-    marginLeft: 8,
-    fontSize: 16,
+    marginLeft: spacing.xs,
+    fontSize: typography.body1,
   },
   categoriesContainer: {
-    paddingLeft: isMobile ? 20 : isTablet ? 40 : 30,
-    marginBottom: 10,
+    paddingLeft: isSmallPhone()
+      ? spacing.lg
+      : isTablet()
+        ? spacing.xxl
+        : spacing.xl,
+    marginBottom: spacing.sm,
   },
   categoriesContent: {
-    paddingRight: isMobile ? 20 : isTablet ? 40 : 30,
+    paddingRight: isSmallPhone()
+      ? spacing.lg
+      : isTablet()
+        ? spacing.xxl
+        : spacing.xl,
   },
   categoryChip: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: spacing.lg,
+    marginRight: spacing.xs,
     borderWidth: 1,
+    borderColor: "#334155",
   },
   categoryText: {
-    fontSize: 14,
-    fontWeight: "500",
-    marginLeft: 6,
-    marginRight: 4,
+    fontSize: typography.body2,
+    fontWeight: "600",
+    marginLeft: spacing.xs,
+    marginRight: spacing.xs,
   },
-  categoryCount: {
-    fontSize: 12,
+  categoryBadge: {
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 2,
+    borderRadius: spacing.xs,
+  },
+  categoryBadgeText: {
+    fontSize: typography.caption,
+    color: "white",
     fontWeight: "600",
   },
   postsContainer: {
     flex: 1,
-    paddingHorizontal: isMobile ? 20 : isTablet ? 40 : 30,
-    maxWidth: isTablet ? 900 : "100%",
-    alignSelf: isTablet ? "center" : "stretch",
-    width: "100%",
+    paddingHorizontal: isSmallPhone()
+      ? spacing.lg
+      : isTablet()
+        ? spacing.xxl
+        : spacing.xl,
   },
   postCard: {
-    marginBottom: 16,
-    borderRadius: 12,
-    elevation: 2,
-  },
-  postContent: {
-    paddingVertical: 16,
+    backgroundColor: "#0f172a",
+    borderWidth: 1,
+    borderColor: "#334155",
+    borderRadius: spacing.md,
+    marginBottom: spacing.md,
+    maxWidth: isTablet() ? wp(80) : "100%",
+    alignSelf: "center",
+    width: "100%",
   },
   postHeader: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: spacing.sm,
   },
-  postAuthorInfo: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  authorLine: {
+  postMeta: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
   },
-  authorName: {
-    fontSize: 14,
+  postMetaText: {
+    marginLeft: spacing.sm,
+  },
+  postAuthor: {
+    fontSize: typography.body1,
     fontWeight: "600",
+    color: "#f9fafb",
   },
   postTime: {
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: typography.caption,
+    color: "#64748b",
   },
-  postTitleContainer: {
-    marginBottom: 8,
+  postActions: {
+    flexDirection: "row",
+    gap: spacing.xs,
   },
   postTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    lineHeight: 22,
+    fontSize: isTablet() ? typography.h5 : typography.h6,
+    fontWeight: "700",
+    color: "#f9fafb",
+    marginBottom: spacing.xs,
+    lineHeight: isTablet() ? typography.h5 * 1.3 : typography.h6 * 1.3,
   },
-  postContentPreview: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 12,
+  postContent: {
+    fontSize: typography.body2,
+    color: "#94a3b8",
+    lineHeight: typography.body2 * 1.5,
+    marginBottom: spacing.md,
   },
-  tagsContainer: {
+  postTags: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
-    marginBottom: 12,
+    marginBottom: spacing.sm,
+    gap: spacing.xs,
   },
   tagChip: {
     backgroundColor: "transparent",
-    height: 24,
+    borderColor: "#3b82f6",
   },
   tagText: {
-    fontSize: 10,
+    fontSize: typography.caption,
+    color: "#3b82f6",
   },
   postStats: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    maxWidth: wp(40),
   },
-  leftStats: {
-    flexDirection: "row",
-    gap: 16,
-  },
-  statItem: {
+  stat: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: spacing.xs / 2,
   },
   statText: {
-    fontSize: 12,
-  },
-  categoryBadge: {
-    backgroundColor: "transparent",
-    height: 24,
-  },
-  categoryBadgeText: {
-    fontSize: 10,
-    fontWeight: "600",
-  },
-  emptyCard: {
-    marginTop: 50,
-    borderRadius: 12,
-    elevation: 2,
-  },
-  emptyContent: {
-    alignItems: "center",
-    paddingVertical: 40,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyDesc: {
-    fontSize: 14,
-    textAlign: "center",
-    lineHeight: 20,
+    fontSize: typography.caption,
+    color: "#64748b",
   },
   fab: {
     position: "absolute",
-    bottom: isMobile ? 20 : isTablet ? 40 : 30,
-    right: isMobile ? 20 : isTablet ? 40 : 30,
+    bottom: isSmallPhone() ? spacing.lg : isTablet() ? spacing.xxl : spacing.xl,
+    right: isSmallPhone() ? spacing.lg : isTablet() ? spacing.xxl : spacing.xl,
   },
 });
 
