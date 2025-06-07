@@ -431,7 +431,7 @@ const HomeScreen = () => {
                       { color: colors.textSecondary },
                     ]}
                   >
-                    İlerleme: %{course.progress}
+                    ��lerleme: %{course.progress}
                   </Text>
                   <View
                     style={[
@@ -596,7 +596,7 @@ const HomeScreen = () => {
 
                 <TouchableOpacity
                   style={styles.secondaryButton}
-                  onPress={() => navigation.navigate(t("navigation.aiChat"))}
+                  onPress={() => navigation.navigate("AIChat" as any)}
                 >
                   <Ionicons name="chatbubble-outline" size={20} color="white" />
                   <Text style={styles.secondaryButtonText}>
