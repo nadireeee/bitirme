@@ -1043,10 +1043,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
+    ...(Platform.OS === "ios" || Platform.OS === "android"
+      ? {
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.3,
+          shadowRadius: 20,
+          elevation: 10,
+        }
+      : {}),
   },
   featureGradient: {
     padding: 24,
