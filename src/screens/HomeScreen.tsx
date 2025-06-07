@@ -1151,14 +1151,18 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   ctaTitle: {
-    fontSize: 26,
+    fontSize: isTablet() ? typography.h1 : typography.h2,
     fontWeight: "800",
     color: "white",
     textAlign: "center",
-    marginBottom: 12,
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
+    marginBottom: spacing.sm,
+    ...(Platform.OS === "ios" || Platform.OS === "android"
+      ? {
+          textShadowColor: "rgba(0, 0, 0, 0.3)",
+          textShadowOffset: { width: 1, height: 1 },
+          textShadowRadius: 3,
+        }
+      : {}),
   },
   ctaDescription: {
     fontSize: 16,
