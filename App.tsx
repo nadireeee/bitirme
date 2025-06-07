@@ -221,3 +221,6 @@ export default function App() {
     </ThemeProvider>
   );
 }
+
+// Register the main component
+AppRegistry.registerComponent("main", () => App);
