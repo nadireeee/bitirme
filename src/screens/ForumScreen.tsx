@@ -5,15 +5,14 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Dimensions,
   TextInput,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Card, Chip, Button, Avatar, FAB } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
-import { useTheme } from "../contexts/ThemeContext";
 import responsive, {
   wp,
   hp,
@@ -42,46 +41,54 @@ const colors = {
   card: "#0f172a",
 };
 
-const { width, height } = Dimensions.get("window");
-
 const ForumScreen = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
-  // colors defined above as constant
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   const categories = [
     {
       id: "all",
-      name: t("forum.categories.all", "Tümü"),
+      name: "Tümü",
       count: 245,
       icon: "grid",
+      color: colors.primary,
     },
-    { id: "cpp", name: "C++", count: 89, icon: "code-slash" },
+    {
+      id: "cpp",
+      name: "C++",
+      count: 89,
+      icon: "code-slash",
+      color: colors.secondary,
+    },
     {
       id: "algorithms",
-      name: t("forum.categories.algorithms", "Algoritmalar"),
+      name: "Algoritmalar",
       count: 67,
       icon: "git-branch",
+      color: colors.success,
     },
     {
       id: "beginners",
-      name: t("forum.categories.beginners", "Başlayanlar"),
+      name: "Başlayanlar",
       count: 123,
       icon: "school",
+      color: colors.warning,
     },
     {
       id: "projects",
-      name: t("forum.categories.projects", "Projeler"),
+      name: "Projeler",
       count: 45,
       icon: "folder",
+      color: colors.error,
     },
     {
       id: "help",
-      name: t("forum.categories.help", "Yardım"),
+      name: "Yardım",
       count: 78,
       icon: "help-circle",
+      color: colors.primary,
     },
   ];
 
@@ -101,6 +108,7 @@ const ForumScreen = () => {
       timeAgo: "2 saat önce",
       isAnswered: true,
       isPinned: false,
+      difficulty: "Orta",
     },
     {
       id: 2,
@@ -117,6 +125,24 @@ const ForumScreen = () => {
       timeAgo: "5 saat önce",
       isAnswered: false,
       isPinned: true,
+      difficulty: "İleri",
+    },
+    {
+      id: 3,
+      title: "C programlamaya yeni başladım, hangi IDE önerirsiniz?",
+      content:
+        "C öğrenmeye yeni başladım. Visual Studio Code mu yoksa başka bir IDE mi kullanmalıyım?",
+      author: "YeniOgrenci",
+      authorAvatar: "https://i.pravatar.cc/100?img=4",
+      category: "beginners",
+      tags: ["ide", "tools", "beginner"],
+      views: 234,
+      replies: 18,
+      likes: 45,
+      timeAgo: "1 gün önce",
+      isAnswered: true,
+      isPinned: false,
+      difficulty: "Başlangıç",
     },
   ];
 
@@ -125,9 +151,77 @@ const ForumScreen = () => {
       ? forumPosts
       : forumPosts.filter((post) => post.category === selectedCategory);
 
+  const renderCategoryChip = (category: any) => (
+    <TouchableOpacity
+      key={category.id}
+      style={[
+        styles.categoryChip,
+        {
+          backgroundColor:
+            selectedCategory === category.id ? category.color : colors.surface,
+          borderColor: category.color,
+        },
+      ]}
+      onPress={() => setSelectedCategory(category.id)}
+    >
+      <Ionicons
+        name={category.icon as any}
+        size={16}
+        color={selectedCategory === category.id ? "white" : category.color}
+      />
+      <Text
+        style={[
+          styles.categoryText,
+          {
+            color: selectedCategory === category.id ? "white" : category.color,
+          },
+        ]}
+      >
+        {category.name}
+      </Text>
+      <View
+        style={[
+          styles.categoryBadge,
+          {
+            backgroundColor:
+              selectedCategory === category.id
+                ? "rgba(255,255,255,0.2)"
+                : `${category.color}20`,
+          },
+        ]}
+      >
+        <Text
+          style={[
+            styles.categoryBadgeText,
+            {
+              color:
+                selectedCategory === category.id ? "white" : category.color,
+            },
+          ]}
+        >
+          {category.count}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case "Başlangıç":
+        return colors.success;
+      case "Orta":
+        return colors.warning;
+      case "İleri":
+        return colors.error;
+      default:
+        return colors.primary;
+    }
+  };
+
   const renderPost = (post: any) => (
     <Card key={post.id} style={styles.postCard}>
-      <Card.Content>
+      <View style={styles.postContent}>
+        {/* Post Header */}
         <View style={styles.postHeader}>
           <View style={styles.postMeta}>
             <Avatar.Image
@@ -135,158 +229,211 @@ const ForumScreen = () => {
               source={{ uri: post.authorAvatar }}
             />
             <View style={styles.postMetaText}>
-              <Text style={styles.postAuthor}>{post.author}</Text>
+              <View style={styles.authorRow}>
+                <Text style={styles.postAuthor}>{post.author}</Text>
+                {post.isPinned && (
+                  <Ionicons name="pin" size={14} color={colors.warning} />
+                )}
+                {post.isAnswered && (
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={14}
+                    color={colors.success}
+                  />
+                )}
+              </View>
               <Text style={styles.postTime}>{post.timeAgo}</Text>
             </View>
           </View>
-          <View style={styles.postActions}>
-            {post.isPinned && <Ionicons name="pin" size={16} color="#f59e0b" />}
-            {post.isAnswered && (
-              <Ionicons name="checkmark-circle" size={16} color="#10b981" />
-            )}
-          </View>
+          <Chip
+            mode="outlined"
+            style={[
+              styles.difficultyChip,
+              { borderColor: getDifficultyColor(post.difficulty) },
+            ]}
+            textStyle={[
+              styles.difficultyText,
+              { color: getDifficultyColor(post.difficulty) },
+            ]}
+          >
+            {post.difficulty}
+          </Chip>
         </View>
 
-        <Text style={styles.postTitle}>{post.title}</Text>
-        <Text style={styles.postContent}>{post.content}</Text>
+        {/* Post Title & Content */}
+        <TouchableOpacity
+          onPress={() =>
+            Alert.alert("Post", `${post.title} detayları açılacak`)
+          }
+        >
+          <Text style={styles.postTitle}>{post.title}</Text>
+          <Text style={styles.postContent} numberOfLines={2}>
+            {post.content}
+          </Text>
+        </TouchableOpacity>
 
+        {/* Tags */}
         <View style={styles.postTags}>
-          {post.tags.map((tag: string, index: number) => (
+          {post.tags.slice(0, 3).map((tag: string, index: number) => (
             <Chip
               key={index}
               mode="outlined"
               style={styles.tagChip}
               textStyle={styles.tagText}
             >
-              {tag}
+              #{tag}
             </Chip>
           ))}
         </View>
 
+        {/* Post Stats */}
         <View style={styles.postStats}>
-          <View style={styles.stat}>
-            <Ionicons name="eye-outline" size={16} color="#64748b" />
-            <Text style={styles.statText}>{post.views}</Text>
+          <View style={styles.statGroup}>
+            <View style={styles.stat}>
+              <Ionicons
+                name="eye-outline"
+                size={16}
+                color={colors.textSecondary}
+              />
+              <Text style={styles.statText}>{post.views}</Text>
+            </View>
+            <View style={styles.stat}>
+              <Ionicons
+                name="chatbubble-outline"
+                size={16}
+                color={colors.textSecondary}
+              />
+              <Text style={styles.statText}>{post.replies}</Text>
+            </View>
+            <View style={styles.stat}>
+              <Ionicons
+                name="heart-outline"
+                size={16}
+                color={colors.textSecondary}
+              />
+              <Text style={styles.statText}>{post.likes}</Text>
+            </View>
           </View>
-          <View style={styles.stat}>
-            <Ionicons name="chatbubble-outline" size={16} color="#64748b" />
-            <Text style={styles.statText}>{post.replies}</Text>
-          </View>
-          <View style={styles.stat}>
-            <Ionicons name="heart-outline" size={16} color="#64748b" />
-            <Text style={styles.statText}>{post.likes}</Text>
-          </View>
+
+          <TouchableOpacity
+            style={styles.replyButton}
+            onPress={() =>
+              Alert.alert("Yanıtla", "Yanıt yazma ekranı açılacak")
+            }
+          >
+            <Ionicons
+              name="chatbubble-ellipses"
+              size={16}
+              color={colors.primary}
+            />
+            <Text style={[styles.replyText, { color: colors.primary }]}>
+              Yanıtla
+            </Text>
+          </TouchableOpacity>
         </View>
-      </Card.Content>
+      </View>
     </Card>
   );
 
   return (
-    <View style={styles.container}>
-      {/* Animated Background */}
-      <View style={styles.backgroundContainer}>
-        <View style={styles.backgroundShape1} />
-        <View style={styles.backgroundShape2} />
-        <View style={styles.backgroundShape3} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Forum</Text>
+        <Text style={styles.headerSubtitle}>
+          C ve C++ geliştiricileri ile bilgi paylaş
+        </Text>
       </View>
 
-      {/* Header */}
-      <LinearGradient colors={["#3b82f6", "#8b5cf6"]} style={styles.header}>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>
-            {t("forum.title", "Topluluk Forumu")}
-          </Text>
-          <Text style={styles.headerSubtitle}>
-            {t("forum.subtitle", "C ve C++ geliştiricileri ile bilgi paylaşın")}
-          </Text>
-        </View>
-      </LinearGradient>
-
-      {/* Search */}
+      {/* Search Bar */}
       <View style={styles.searchContainer}>
         <View style={[styles.searchBar, { backgroundColor: colors.surface }]}>
-          <Ionicons name="search" size={20} color="#64748b" />
+          <Ionicons name="search" size={20} color={colors.textSecondary} />
           <TextInput
             style={[styles.searchInput, { color: colors.text }]}
-            placeholder={t("forum.searchPlaceholder", "Forum'da ara...")}
-            placeholderTextColor="#64748b"
+            placeholder="Forum'da ara..."
+            placeholderTextColor={colors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <Ionicons
+                name="close-circle"
+                size={20}
+                color={colors.textSecondary}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Quick Stats */}
+      <View style={styles.quickStats}>
+        <View style={styles.quickStat}>
+          <Text style={[styles.quickStatNumber, { color: colors.primary }]}>
+            245
+          </Text>
+          <Text style={styles.quickStatLabel}>Toplam Soru</Text>
+        </View>
+        <View style={styles.quickStat}>
+          <Text style={[styles.quickStatNumber, { color: colors.success }]}>
+            189
+          </Text>
+          <Text style={styles.quickStatLabel}>Çözümlenmiş</Text>
+        </View>
+        <View style={styles.quickStat}>
+          <Text style={[styles.quickStatNumber, { color: colors.warning }]}>
+            56
+          </Text>
+          <Text style={styles.quickStatLabel}>Aktif Tartışma</Text>
         </View>
       </View>
 
       {/* Categories */}
       <View style={styles.categoriesContainer}>
+        <Text style={styles.categoriesTitle}>Kategoriler</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoriesContent}
         >
-          {categories.map((category) => (
-            <TouchableOpacity
-              key={category.id}
-              style={[
-                styles.categoryChip,
-                {
-                  backgroundColor:
-                    selectedCategory === category.id
-                      ? "#3b82f6"
-                      : colors.surface,
-                },
-              ]}
-              onPress={() => setSelectedCategory(category.id)}
-            >
-              <Ionicons
-                name={category.icon as any}
-                size={16}
-                color={selectedCategory === category.id ? "white" : colors.text}
-              />
-              <Text
-                style={[
-                  styles.categoryText,
-                  {
-                    color:
-                      selectedCategory === category.id ? "white" : colors.text,
-                  },
-                ]}
-              >
-                {category.name}
-              </Text>
-              <View
-                style={[
-                  styles.categoryBadge,
-                  {
-                    backgroundColor:
-                      selectedCategory === category.id
-                        ? "rgba(255,255,255,0.2)"
-                        : "#3b82f6",
-                  },
-                ]}
-              >
-                <Text style={styles.categoryBadgeText}>{category.count}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+          {categories.map(renderCategoryChip)}
         </ScrollView>
       </View>
 
-      {/* Posts */}
+      {/* Posts List */}
       <ScrollView
         style={styles.postsContainer}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.postsContent}
       >
-        {filteredPosts.map(renderPost)}
+        {filteredPosts.length > 0 ? (
+          filteredPosts.map(renderPost)
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Ionicons
+              name="chatbubbles-outline"
+              size={64}
+              color={colors.textSecondary}
+            />
+            <Text style={styles.emptyTitle}>Bu kategoride henüz soru yok</Text>
+            <Text style={styles.emptyDescription}>
+              İlk soruyu sen sor ve tartışmayı başlat!
+            </Text>
+          </View>
+        )}
       </ScrollView>
 
       {/* Floating Action Button */}
       <FAB
-        style={[styles.fab, { backgroundColor: "#3b82f6" }]}
+        style={[styles.fab, { backgroundColor: colors.primary }]}
         icon="plus"
         color="white"
-        onPress={() => {
-          // Navigate to create post screen
-        }}
+        onPress={() =>
+          Alert.alert("Yeni Soru", "Soru oluşturma ekranı açılacak")
+        }
+        label="Soru Sor"
       />
     </View>
   );
@@ -295,234 +442,227 @@ const ForumScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#030712",
-  },
-  backgroundContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: -1,
-  },
-  backgroundShape1: {
-    position: "absolute",
-    width: wp(100),
-    height: wp(100),
-    backgroundColor: "rgba(59, 130, 246, 0.03)",
-    borderRadius: wp(50),
-    top: -wp(25),
-    right: -wp(25),
-  },
-  backgroundShape2: {
-    position: "absolute",
-    width: wp(75),
-    height: wp(75),
-    backgroundColor: "rgba(139, 92, 246, 0.02)",
-    borderRadius: wp(37.5),
-    top: hp(50),
-    right: -wp(30),
-  },
-  backgroundShape3: {
-    position: "absolute",
-    width: wp(60),
-    height: wp(60),
-    backgroundColor: "rgba(16, 185, 129, 0.02)",
-    borderRadius: wp(30),
-    bottom: hp(20),
-    left: -wp(15),
   },
   header: {
+    paddingHorizontal: spacing.lg,
     paddingTop: isTablet() ? spacing.xl : spacing.xxl + 20,
-    paddingBottom: spacing.xl,
-    paddingHorizontal: isSmallPhone()
-      ? spacing.lg
-      : isTablet()
-        ? spacing.xxl
-        : spacing.xl,
-  },
-  headerContent: {
-    alignItems: "center",
-    maxWidth: isTablet() ? wp(80) : "100%",
-    alignSelf: "center",
+    paddingBottom: spacing.md,
   },
   headerTitle: {
-    fontSize: isSmallPhone()
-      ? typography.h3
-      : isTablet()
-        ? typography.h1
-        : typography.h2,
-    fontWeight: "700",
-    color: "white",
+    fontSize: isTablet() ? typography.h1 : typography.h2,
+    fontWeight: "800",
+    color: colors.text,
     marginBottom: spacing.xs,
-    textAlign: "center",
   },
   headerSubtitle: {
-    fontSize: isSmallPhone()
-      ? typography.body2
-      : isTablet()
-        ? typography.h6
-        : typography.body1,
-    color: "rgba(255, 255, 255, 0.8)",
-    textAlign: "center",
-    maxWidth: isTablet() ? wp(60) : "90%",
+    fontSize: typography.body1,
+    color: colors.textSecondary,
   },
   searchContainer: {
-    paddingHorizontal: isSmallPhone()
-      ? spacing.lg
-      : isTablet()
-        ? spacing.xxl
-        : spacing.xl,
-    paddingVertical: spacing.md,
-    marginTop: -spacing.md,
-    maxWidth: isTablet() ? wp(80) : "100%",
-    alignSelf: "center",
-    width: "100%",
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
   },
   searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
+    ...commonStyles.row,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: spacing.sm,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: colors.border,
+    gap: spacing.sm,
   },
   searchInput: {
     flex: 1,
-    marginLeft: spacing.xs,
     fontSize: typography.body1,
   },
+  quickStats: {
+    flexDirection: "row",
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+    gap: spacing.md,
+  },
+  quickStat: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: spacing.md,
+    padding: spacing.md,
+    ...commonStyles.center,
+    ...commonStyles.shadow,
+  },
+  quickStatNumber: {
+    fontSize: typography.h5,
+    fontWeight: "800",
+    marginBottom: spacing.xs / 2,
+  },
+  quickStatLabel: {
+    fontSize: typography.caption,
+    color: colors.textSecondary,
+    textAlign: "center",
+  },
   categoriesContainer: {
-    paddingLeft: isSmallPhone()
-      ? spacing.lg
-      : isTablet()
-        ? spacing.xxl
-        : spacing.xl,
+    marginBottom: spacing.lg,
+  },
+  categoriesTitle: {
+    fontSize: typography.h6,
+    fontWeight: "700",
+    color: colors.text,
+    paddingHorizontal: spacing.lg,
     marginBottom: spacing.sm,
   },
   categoriesContent: {
-    paddingRight: isSmallPhone()
-      ? spacing.lg
-      : isTablet()
-        ? spacing.xxl
-        : spacing.xl,
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
   },
   categoryChip: {
-    flexDirection: "row",
-    alignItems: "center",
+    ...commonStyles.row,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: spacing.lg,
-    marginRight: spacing.xs,
     borderWidth: 1,
-    borderColor: "#334155",
+    gap: spacing.xs,
   },
   categoryText: {
     fontSize: typography.body2,
     fontWeight: "600",
-    marginLeft: spacing.xs,
-    marginRight: spacing.xs,
   },
   categoryBadge: {
     paddingHorizontal: spacing.xs,
     paddingVertical: 2,
     borderRadius: spacing.xs,
+    minWidth: 20,
+    ...commonStyles.center,
   },
   categoryBadgeText: {
     fontSize: typography.caption,
-    color: "white",
     fontWeight: "600",
   },
   postsContainer: {
     flex: 1,
-    paddingHorizontal: isSmallPhone()
-      ? spacing.lg
-      : isTablet()
-        ? spacing.xxl
-        : spacing.xl,
+  },
+  postsContent: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xxl + 80, // Extra space for FAB
   },
   postCard: {
-    backgroundColor: "#0f172a",
-    borderWidth: 1,
-    borderColor: "#334155",
+    backgroundColor: colors.surface,
     borderRadius: spacing.md,
     marginBottom: spacing.md,
-    maxWidth: isTablet() ? wp(80) : "100%",
-    alignSelf: "center",
-    width: "100%",
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...commonStyles.shadow,
+  },
+  postContent: {
+    padding: spacing.md,
   },
   postHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    ...commonStyles.row,
+    ...commonStyles.spaceBetween,
     marginBottom: spacing.sm,
   },
   postMeta: {
-    flexDirection: "row",
-    alignItems: "center",
+    ...commonStyles.row,
+    flex: 1,
   },
   postMetaText: {
     marginLeft: spacing.sm,
+    flex: 1,
+  },
+  authorRow: {
+    ...commonStyles.row,
+    gap: spacing.xs,
+    alignItems: "center",
   },
   postAuthor: {
     fontSize: typography.body1,
     fontWeight: "600",
-    color: "#f9fafb",
+    color: colors.text,
   },
   postTime: {
     fontSize: typography.caption,
-    color: "#64748b",
+    color: colors.textSecondary,
   },
-  postActions: {
-    flexDirection: "row",
-    gap: spacing.xs,
+  difficultyChip: {
+    backgroundColor: "transparent",
+  },
+  difficultyText: {
+    fontSize: typography.caption,
+    fontWeight: "600",
   },
   postTitle: {
     fontSize: isTablet() ? typography.h5 : typography.h6,
     fontWeight: "700",
-    color: "#f9fafb",
+    color: colors.text,
     marginBottom: spacing.xs,
     lineHeight: isTablet() ? typography.h5 * 1.3 : typography.h6 * 1.3,
   },
-  postContent: {
-    fontSize: typography.body2,
-    color: "#94a3b8",
-    lineHeight: typography.body2 * 1.5,
-    marginBottom: spacing.md,
-  },
   postTags: {
-    flexDirection: "row",
+    ...commonStyles.row,
     flexWrap: "wrap",
-    marginBottom: spacing.sm,
+    marginVertical: spacing.sm,
     gap: spacing.xs,
   },
   tagChip: {
     backgroundColor: "transparent",
-    borderColor: "#3b82f6",
+    borderColor: colors.primary,
   },
   tagText: {
     fontSize: typography.caption,
-    color: "#3b82f6",
+    color: colors.primary,
   },
   postStats: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    maxWidth: wp(40),
+    ...commonStyles.row,
+    ...commonStyles.spaceBetween,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  statGroup: {
+    ...commonStyles.row,
+    gap: spacing.md,
   },
   stat: {
-    flexDirection: "row",
-    alignItems: "center",
+    ...commonStyles.row,
     gap: spacing.xs / 2,
+    alignItems: "center",
   },
   statText: {
     fontSize: typography.caption,
-    color: "#64748b",
+    color: colors.textSecondary,
+  },
+  replyButton: {
+    ...commonStyles.row,
+    backgroundColor: `${colors.primary}20`,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs / 2,
+    borderRadius: spacing.sm,
+    gap: spacing.xs / 2,
+  },
+  replyText: {
+    fontSize: typography.caption,
+    fontWeight: "600",
+  },
+  emptyContainer: {
+    ...commonStyles.center,
+    paddingVertical: spacing.xxl,
+  },
+  emptyTitle: {
+    fontSize: typography.h6,
+    fontWeight: "600",
+    color: colors.text,
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  emptyDescription: {
+    fontSize: typography.body2,
+    color: colors.textSecondary,
+    textAlign: "center",
+    paddingHorizontal: spacing.lg,
   },
   fab: {
     position: "absolute",
-    bottom: isSmallPhone() ? spacing.lg : isTablet() ? spacing.xxl : spacing.xl,
-    right: isSmallPhone() ? spacing.lg : isTablet() ? spacing.xxl : spacing.xl,
+    bottom: spacing.xl,
+    right: spacing.lg,
   },
 });
 
