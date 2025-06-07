@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,29 +6,32 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  Animated,
-  Platform,
+  RefreshControl,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import {
+  Card,
+  Button,
+  FAB,
+  Portal,
+  Dialog,
+  Paragraph,
+} from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
-import { Card, Button, Avatar, Chip } from "react-native-paper";
+import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
-import { useTheme } from "../contexts/ThemeContext";
-import LanguageSwitch from "../components/common/LanguageSwitch";
 import responsive, {
   wp,
   hp,
   typography,
   spacing,
   commonStyles,
-  getGridColumns,
-  getCardWidth,
   isTablet,
   isSmallPhone,
 } from "../utils/responsive";
+import SmartSuggestions from "../components/ai/SmartSuggestions";
+import aiService from "../services/aiService";
 
-// Direct colors object to avoid context issues
 const colors = {
   background: "#030712",
   surface: "#0f172a",
@@ -37,7 +40,7 @@ const colors = {
   outline: "#334155",
   primary: "#3b82f6",
   secondary: "#8b5cf6",
-  border: "#1e293b",
+  accent: "#06b6d4",
   success: "#10b981",
   warning: "#f59e0b",
   error: "#ef4444",
@@ -46,362 +49,469 @@ const colors = {
 
 const { width, height } = Dimensions.get("window");
 
+interface QuickAction {
+  id: string;
+  title: string;
+  titleTR: string;
+  description: string;
+  descriptionTR: string;
+  icon: string;
+  color: string;
+  screen: string;
+  aiPowered?: boolean;
+}
+
+const quickActions: QuickAction[] = [
+  {
+    id: "quiz",
+    title: "Take Quiz",
+    titleTR: "Quiz Çöz",
+    description: "Test your knowledge",
+    descriptionTR: "Bilginizi test edin",
+    icon: "school",
+    color: "#10b981",
+    screen: "Quiz",
+    aiPowered: true,
+  },
+  {
+    id: "playground",
+    title: "Code Playground",
+    titleTR: "Kod Alanı",
+    description: "Write and test code",
+    descriptionTR: "Kod yazın ve test edin",
+    icon: "code-slash",
+    color: "#3b82f6",
+    screen: "CodePlayground",
+    aiPowered: true,
+  },
+  {
+    id: "courses",
+    title: "Learn Courses",
+    titleTR: "Kurslar",
+    description: "Structured learning",
+    descriptionTR: "Yapılandırılmış öğrenme",
+    icon: "book",
+    color: "#8b5cf6",
+    screen: "Courses",
+    screen: "Main",
+    params: { screen: "Courses" },
+  },
+  {
+    id: "ai-chat",
+    title: "AI Tutor",
+    titleTR: "AI Öğretmen",
+    description: "Get instant help",
+    descriptionTR: "Anında yardım alın",
+    icon: "sparkles",
+    color: "#06b6d4",
+    screen: "Main",
+    params: { screen: "AIChat" },
+    aiPowered: true,
+  },
+  {
+    id: "forum",
+    title: "Community",
+    titleTR: "Topluluk",
+    description: "Join discussions",
+    descriptionTR: "Tartışmalara katılın",
+    icon: "chatbubbles",
+    color: "#f59e0b",
+    screen: "Main",
+    params: { screen: "Forum" },
+  },
+  {
+    id: "progress",
+    title: "Progress",
+    titleTR: "İlerleme",
+    description: "Track your growth",
+    descriptionTR: "Gelişiminizi takip edin",
+    icon: "trending-up",
+    color: "#ef4444",
+    screen: "Progress",
+  },
+];
+
 const HomeScreen = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
 
-  // Animation values
-  const [fadeAnim] = useState(new Animated.Value(0));
-  const [slideAnim] = useState(new Animated.Value(50));
-  const [scaleAnim] = useState(new Animated.Value(0.9));
+  const [refreshing, setRefreshing] = useState(false);
+  const [aiStatus, setAiStatus] = useState<"connected" | "disconnected">(
+    "disconnected",
+  );
+  const [showAiDialog, setShowAiDialog] = useState(false);
+  const [userStats, setUserStats] = useState({
+    totalQuizzes: 0,
+    averageScore: 0,
+    streakCount: 0,
+    completedCourses: 0,
+  });
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 1000,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    loadInitialData();
   }, []);
 
-  const quickActions = [
-    {
-      title: t("navigation.courses", "Kurslar"),
-      description: "C ve C++ kurslarını keşfet",
-      icon: "book",
-      color: colors.primary,
-      route: "Courses",
-    },
-    {
-      title: t("navigation.exercises", "Alıştırmalar"),
-      description: "Kod pratiği yap",
-      icon: "code-slash",
-      color: colors.secondary,
-      route: "Exercises",
-    },
-    {
-      title: t("navigation.forum", "Forum"),
-      description: "Topluluğa katıl",
-      icon: "chatbubbles",
-      color: colors.success,
-      route: "Forum",
-    },
-    {
-      title: t("navigation.aiChat", "AI Mentor"),
-      description: "AI ile öğren",
-      icon: "chatbubble-ellipses",
-      color: colors.warning,
-      route: "AIChat",
-    },
-  ];
+  const loadInitialData = async () => {
+    try {
+      // Check AI status
+      const status = await aiService.getHealthStatus();
+      setAiStatus(status.status);
 
-  const stats = [
-    {
-      label: "Aktif Kullanıcı",
-      value: "12K+",
-      icon: "people",
-      color: colors.primary,
-    },
-    {
-      label: "Kurs Sayısı",
-      value: "25+",
-      icon: "book",
-      color: colors.secondary,
-    },
-    {
-      label: "Alıştırma",
-      value: "500+",
-      icon: "code-slash",
-      color: colors.success,
-    },
-    {
-      label: "Başarı Oranı",
-      value: "%95",
-      icon: "trophy",
-      color: colors.warning,
-    },
-  ];
+      // Load user stats (you'd implement this based on your backend)
+      // const stats = await userService.getUserStats();
+      // setUserStats(stats);
 
-  const popularCourses = [
-    {
-      id: 1,
-      title: "C Programlama Temelleri",
-      level: "Başlangıç",
-      students: 1247,
-      rating: 4.8,
-      color: colors.success,
-      progress: 0,
-    },
-    {
-      id: 2,
-      title: "C++ OOP",
-      level: "Orta",
-      students: 892,
-      rating: 4.9,
-      color: colors.primary,
-      progress: 65,
-    },
-  ];
+      setUserStats({
+        totalQuizzes: 12,
+        averageScore: 85,
+        streakCount: 5,
+        completedCourses: 3,
+      });
+    } catch (error) {
+      console.warn("Error loading initial data:", error);
+    }
+  };
 
-  const renderQuickAction = (action: any, index: number) => (
-    <Animated.View
-      key={index}
-      style={[
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
-        },
-      ]}
-    >
-      <TouchableOpacity
-        style={[styles.actionCard, { borderLeftColor: action.color }]}
-        onPress={() => navigation.navigate(action.route as any)}
-      >
-        <View style={styles.actionContent}>
-          <View
-            style={[
-              styles.actionIcon,
-              { backgroundColor: `${action.color}20` },
-            ]}
-          >
-            <Ionicons
-              name={action.icon as any}
-              size={24}
-              color={action.color}
-            />
-          </View>
-          <View style={styles.actionText}>
-            <Text style={styles.actionTitle}>{action.title}</Text>
-            <Text style={styles.actionDescription}>{action.description}</Text>
-          </View>
-          <Ionicons
-            name="chevron-forward"
-            size={20}
-            color={colors.textSecondary}
-          />
-        </View>
-      </TouchableOpacity>
-    </Animated.View>
-  );
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadInitialData();
+    setRefreshing(false);
+  };
 
-  const renderStat = (stat: any, index: number) => (
-    <Animated.View
-      key={index}
-      style={[
-        styles.statCard,
-        {
-          opacity: fadeAnim,
-          transform: [{ scale: scaleAnim }],
-        },
-      ]}
-    >
-      <View style={[styles.statIcon, { backgroundColor: `${stat.color}20` }]}>
-        <Ionicons name={stat.icon as any} size={20} color={stat.color} />
-      </View>
-      <Text style={[styles.statValue, { color: stat.color }]}>
-        {stat.value}
-      </Text>
-      <Text style={styles.statLabel}>{stat.label}</Text>
-    </Animated.View>
-  );
+  const handleQuickAction = (action: QuickAction) => {
+    if (action.params) {
+      navigation.navigate(action.screen as any, action.params);
+    } else {
+      navigation.navigate(action.screen as any);
+    }
+  };
 
-  const renderCourseCard = (course: any, index: number) => (
-    <Animated.View
-      key={course.id}
-      style={[
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-        },
-      ]}
-    >
-      <TouchableOpacity
-        onPress={() =>
-          navigation.navigate("CourseDetail", { courseId: course.id })
-        }
-      >
-        <Card style={styles.courseCard}>
-          <LinearGradient
-            colors={[`${course.color}20`, `${course.color}10`]}
-            style={styles.courseGradient}
-          >
-            <View style={styles.courseContent}>
-              <View style={styles.courseHeader}>
-                <Chip
-                  mode="outlined"
-                  style={[styles.levelChip, { borderColor: course.color }]}
-                  textStyle={[styles.levelText, { color: course.color }]}
-                >
-                  {course.level}
-                </Chip>
-                <View style={styles.courseRating}>
-                  <Ionicons name="star" size={14} color={colors.warning} />
-                  <Text style={styles.ratingText}>{course.rating}</Text>
-                </View>
-              </View>
-
-              <Text style={styles.courseTitle}>{course.title}</Text>
-
-              <View style={styles.courseStats}>
-                <View style={styles.courseStat}>
-                  <Ionicons
-                    name="people"
-                    size={14}
-                    color={colors.textSecondary}
-                  />
-                  <Text style={styles.courseStatText}>{course.students}</Text>
-                </View>
-              </View>
-
-              {course.progress > 0 && (
-                <View style={styles.progressContainer}>
-                  <Text style={styles.progressText}>
-                    İlerleme: %{course.progress}
-                  </Text>
-                  <View style={styles.progressBar}>
-                    <View
-                      style={[
-                        styles.progressFill,
-                        {
-                          width: `${course.progress}%`,
-                          backgroundColor: course.color,
-                        },
-                      ]}
-                    />
-                  </View>
-                </View>
-              )}
-            </View>
-          </LinearGradient>
-        </Card>
-      </TouchableOpacity>
-    </Animated.View>
-  );
+  const handleAiFeatureInfo = () => {
+    setShowAiDialog(true);
+  };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={styles.container}>
       <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+        showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <Animated.View
-          style={[
-            styles.header,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
+        {/* Hero Section */}
+        <LinearGradient
+          colors={[colors.primary, colors.secondary, colors.accent]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.heroSection}
         >
-          <View style={styles.headerTop}>
-            <View style={styles.welcomeSection}>
-              <Text style={styles.welcomeText}>Merhaba! 👋</Text>
-              <Text style={styles.headerTitle}>CodeMentor AI</Text>
+          <View style={styles.heroContent}>
+            <View style={styles.heroText}>
+              <Text style={styles.heroTitle}>CodeMentor AI</Text>
+              <Text style={styles.heroSubtitle}>
+                🤖 AI Destekli C/C++ Öğrenme Platformu
+              </Text>
+              <Text style={styles.heroDescription}>
+                Yapay zeka ile kişiselleştirilmiş öğrenme deneyimi
+              </Text>
             </View>
-            <View style={styles.headerActions}>
-              <LanguageSwitch />
-              <TouchableOpacity style={styles.notificationButton}>
-                <Ionicons
-                  name="notifications-outline"
-                  size={24}
-                  color={colors.text}
-                />
-              </TouchableOpacity>
-            </View>
+
+            <TouchableOpacity
+              style={styles.aiStatusBadge}
+              onPress={handleAiFeatureInfo}
+            >
+              <View
+                style={[
+                  styles.aiStatusIndicator,
+                  {
+                    backgroundColor:
+                      aiStatus === "connected"
+                        ? colors.success
+                        : colors.warning,
+                  },
+                ]}
+              />
+              <Text style={styles.aiStatusText}>
+                {aiStatus === "connected" ? "AI Aktif" : "AI Bağlanıyor"}
+              </Text>
+              <Ionicons
+                name="information-circle"
+                size={wp(4)}
+                color={colors.text}
+              />
+            </TouchableOpacity>
           </View>
-        </Animated.View>
+        </LinearGradient>
+
+        {/* Stats Cards */}
+        <View style={styles.statsContainer}>
+          <Card style={styles.statCard}>
+            <Card.Content style={styles.statContent}>
+              <Ionicons name="trophy" size={wp(6)} color={colors.warning} />
+              <Text style={styles.statNumber}>{userStats.totalQuizzes}</Text>
+              <Text style={styles.statLabel}>Quiz Tamamlandı</Text>
+            </Card.Content>
+          </Card>
+
+          <Card style={styles.statCard}>
+            <Card.Content style={styles.statContent}>
+              <Ionicons name="star" size={wp(6)} color={colors.success} />
+              <Text style={styles.statNumber}>{userStats.averageScore}%</Text>
+              <Text style={styles.statLabel}>Ortalama Puan</Text>
+            </Card.Content>
+          </Card>
+
+          <Card style={styles.statCard}>
+            <Card.Content style={styles.statContent}>
+              <Ionicons name="flame" size={wp(6)} color={colors.error} />
+              <Text style={styles.statNumber}>{userStats.streakCount}</Text>
+              <Text style={styles.statLabel}>Günlük Seri</Text>
+            </Card.Content>
+          </Card>
+        </View>
+
+        {/* AI Smart Suggestions */}
+        <SmartSuggestions
+          userLevel="beginner"
+          recentActivity={["variables", "functions"]}
+          onNavigate={(screen: string, params?: any) => {
+            if (params) {
+              navigation.navigate(screen as any, params);
+            } else {
+              navigation.navigate(screen as any);
+            }
+          }}
+        />
 
         {/* Quick Actions */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hızlı Erişim</Text>
-          <View style={styles.actionsGrid}>
-            {quickActions.map(renderQuickAction)}
-          </View>
-        </View>
+        <Card style={styles.actionsCard}>
+          <Card.Content style={styles.actionsContent}>
+            <View style={styles.actionsHeader}>
+              <Text style={styles.actionsTitle}>Hızlı Eylemler</Text>
+              <Text style={styles.actionsSubtitle}>
+                Öğrenmeye hemen başlayın
+              </Text>
+            </View>
 
-        {/* Stats */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Topluluk İstatistikleri</Text>
-          <View style={styles.statsGrid}>{stats.map(renderStat)}</View>
-        </View>
-
-        {/* Popular Courses */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Popüler Kurslar</Text>
-            <TouchableOpacity
-              style={[styles.quickActionCard, { backgroundColor: "#8b5cf6" }]}
-              onPress={() => navigation.navigate("Main", { screen: "Forum" })}
-            >
-              <Ionicons name="chatbubbles" size={wp(6)} color="#fff" />
-              <Text style={styles.quickActionText}>Forum</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.quickActionCard, { backgroundColor: "#f59e0b" }]}
-              onPress={() => navigation.navigate("Quiz")}
-            >
-              <Ionicons name="help-circle" size={wp(6)} color="#fff" />
-              <Text style={styles.quickActionText}>Sınavlar</Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.coursesScrollContent}
-          >
-            {popularCourses.map(renderCourseCard)}
-          </ScrollView>
-        </View>
-
-        {/* CTA Section */}
-        <Animated.View
-          style={[
-            {
-              opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }],
-            },
-          ]}
-        >
-          <Card style={styles.ctaCard}>
-            <LinearGradient
-              colors={[colors.primary, colors.secondary]}
-              style={styles.ctaGradient}
-            >
-              <View style={styles.ctaContent}>
-                <Text style={styles.ctaTitle}>Öğrenmeye Başla!</Text>
-                <Text style={styles.ctaDescription}>
-                  C ve C++ programlama dünyasına adım at
-                </Text>
+            <View style={styles.actionsGrid}>
+              {quickActions.map((action) => (
                 <TouchableOpacity
-                  style={styles.ctaButton}
-                  onPress={() => navigation.navigate("Courses" as any)}
+                  key={action.id}
+                  style={[styles.actionCard, { backgroundColor: action.color }]}
+                  onPress={() => handleQuickAction(action)}
                 >
-                  <Text style={styles.ctaButtonText}>Kurslara Göz At</Text>
+                  <LinearGradient
+                    colors={[action.color, `${action.color}CC`]}
+                    style={styles.actionGradient}
+                  >
+                    <View style={styles.actionHeader}>
+                      <Ionicons
+                        name={action.icon as any}
+                        size={wp(6)}
+                        color={colors.text}
+                      />
+                      {action.aiPowered && (
+                        <View style={styles.aiPoweredBadge}>
+                          <Ionicons
+                            name="sparkles"
+                            size={wp(3)}
+                            color={colors.accent}
+                          />
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.actionTitle}>{action.titleTR}</Text>
+                    <Text style={styles.actionDescription}>
+                      {action.descriptionTR}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Card.Content>
+        </Card>
+
+        {/* Recent Activity */}
+        <Card style={styles.activityCard}>
+          <Card.Content style={styles.activityContent}>
+            <View style={styles.activityHeader}>
+              <Ionicons name="time" size={wp(5)} color={colors.accent} />
+              <Text style={styles.activityTitle}>Son Aktiviteler</Text>
+            </View>
+
+            <View style={styles.activityList}>
+              <View style={styles.activityItem}>
+                <View style={styles.activityIcon}>
                   <Ionicons
-                    name="arrow-forward"
-                    size={20}
+                    name="checkmark-circle"
+                    size={wp(4)}
+                    color={colors.success}
+                  />
+                </View>
+                <View style={styles.activityInfo}>
+                  <Text style={styles.activityText}>
+                    C++ Temelleri quizi tamamlandı
+                  </Text>
+                  <Text style={styles.activityTime}>2 saat önce</Text>
+                </View>
+              </View>
+
+              <View style={styles.activityItem}>
+                <View style={styles.activityIcon}>
+                  <Ionicons
+                    name="code-slash"
+                    size={wp(4)}
                     color={colors.primary}
                   />
-                </TouchableOpacity>
+                </View>
+                <View style={styles.activityInfo}>
+                  <Text style={styles.activityText}>
+                    Hello World programı çalıştırıldı
+                  </Text>
+                  <Text style={styles.activityTime}>5 saat önce</Text>
+                </View>
               </View>
-            </LinearGradient>
-          </Card>
-        </Animated.View>
+
+              <View style={styles.activityItem}>
+                <View style={styles.activityIcon}>
+                  <Ionicons
+                    name="sparkles"
+                    size={wp(4)}
+                    color={colors.accent}
+                  />
+                </View>
+                <View style={styles.activityInfo}>
+                  <Text style={styles.activityText}>
+                    AI asistanından değişkenler hakkında yardım alındı
+                  </Text>
+                  <Text style={styles.activityTime}>1 gün önce</Text>
+                </View>
+              </View>
+            </View>
+          </Card.Content>
+        </Card>
+
+        {/* Learning Path */}
+        <Card style={styles.pathCard}>
+          <Card.Content style={styles.pathContent}>
+            <View style={styles.pathHeader}>
+              <LinearGradient
+                colors={[colors.secondary, colors.primary]}
+                style={styles.pathIcon}
+              >
+                <Ionicons name="map" size={wp(5)} color={colors.text} />
+              </LinearGradient>
+              <View style={styles.pathText}>
+                <Text style={styles.pathTitle}>Öğrenme Yolunuz</Text>
+                <Text style={styles.pathSubtitle}>
+                  C++ ustası olmaya giden yol
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.pathProgress}>
+              <View style={styles.pathStep}>
+                <View
+                  style={[
+                    styles.pathStepIcon,
+                    { backgroundColor: colors.success },
+                  ]}
+                >
+                  <Ionicons name="checkmark" size={wp(4)} color={colors.text} />
+                </View>
+                <Text style={styles.pathStepText}>Temel Kavramlar ✓</Text>
+              </View>
+
+              <View style={styles.pathConnector} />
+
+              <View style={styles.pathStep}>
+                <View
+                  style={[
+                    styles.pathStepIcon,
+                    { backgroundColor: colors.primary },
+                  ]}
+                >
+                  <Text style={styles.pathStepNumber}>2</Text>
+                </View>
+                <Text style={styles.pathStepText}>Fonksiyonlar (Aktif)</Text>
+              </View>
+
+              <View style={styles.pathConnector} />
+
+              <View style={styles.pathStep}>
+                <View
+                  style={[
+                    styles.pathStepIcon,
+                    { backgroundColor: colors.outline },
+                  ]}
+                >
+                  <Text style={styles.pathStepNumber}>3</Text>
+                </View>
+                <Text style={styles.pathStepText}>Nesne Yönelimli</Text>
+              </View>
+            </View>
+
+            <Button
+              mode="contained"
+              onPress={() => navigation.navigate("Main", { screen: "Courses" })}
+              style={styles.pathButton}
+              contentStyle={styles.pathButtonContent}
+            >
+              Devam Et
+            </Button>
+          </Card.Content>
+        </Card>
       </ScrollView>
+
+      {/* AI Feature Info Dialog */}
+      <Portal>
+        <Dialog visible={showAiDialog} onDismiss={() => setShowAiDialog(false)}>
+          <Dialog.Title>🤖 AI Özellikleri</Dialog.Title>
+          <Dialog.Content>
+            <Paragraph style={styles.dialogText}>
+              CodeMentor AI, öğrenme deneyiminizi geliştirmek için yapay zeka
+              kullanır:
+            </Paragraph>
+            <View style={styles.featureList}>
+              <Text style={styles.featureItem}>
+                ✨ Akıllı kod analizi ve öneriler
+              </Text>
+              <Text style={styles.featureItem}>
+                🎯 Kişiselleştirilmiş quiz ipuçları
+              </Text>
+              <Text style={styles.featureItem}>
+                📚 Otomatik konu açıklamaları
+              </Text>
+              <Text style={styles.featureItem}>
+                🚀 Hızlı problem çözme yardımı
+              </Text>
+              <Text style={styles.featureItem}>
+                📈 Akıllı öğrenme önerileri
+              </Text>
+            </View>
+            <Paragraph style={styles.dialogText}>
+              Durum: {aiStatus === "connected" ? "🟢 Aktif" : "🟡 Bağlanıyor"}
+            </Paragraph>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowAiDialog(false)}>Tamam</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
+      {/* Floating AI Assistant Button */}
+      <FAB
+        icon="sparkles"
+        style={styles.aiFab}
+        onPress={() => navigation.navigate("Main", { screen: "AIChat" })}
+        label={aiStatus === "connected" ? "AI Asistan" : "AI"}
+      />
     </View>
   );
 };
@@ -409,241 +519,295 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  scrollView: {
-    flex: 1,
+    backgroundColor: colors.background,
   },
   scrollContent: {
-    paddingBottom: spacing.xxl,
+    paddingBottom: spacing.xxxl,
   },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: isTablet() ? spacing.xl : spacing.xxl + 20,
-    paddingBottom: spacing.lg,
+  heroSection: {
+    padding: spacing.lg,
+    paddingTop: spacing.xl,
+    borderBottomLeftRadius: spacing.xl,
+    borderBottomRightRadius: spacing.xl,
   },
-  headerTop: {
-    ...commonStyles.row,
-    ...commonStyles.spaceBetween,
+  heroContent: {
+    alignItems: "center",
   },
-  welcomeSection: {
-    flex: 1,
+  heroText: {
+    alignItems: "center",
+    marginBottom: spacing.lg,
   },
-  welcomeText: {
-    fontSize: typography.body1,
-    color: colors.textSecondary,
-    marginBottom: spacing.xs / 2,
-  },
-  headerTitle: {
+  heroTitle: {
     fontSize: isTablet() ? typography.h1 : typography.h2,
     fontWeight: "800",
     color: colors.text,
+    marginBottom: spacing.xs,
+    textAlign: "center",
   },
-  headerActions: {
-    ...commonStyles.row,
-    gap: spacing.sm,
-  },
-  notificationButton: {
-    padding: spacing.xs,
-    borderRadius: spacing.sm,
-    backgroundColor: `${colors.surface}80`,
-  },
-  section: {
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.xl,
-  },
-  sectionTitle: {
-    fontSize: isTablet() ? typography.h4 : typography.h5,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: spacing.md,
-  },
-  sectionHeader: {
-    ...commonStyles.row,
-    ...commonStyles.spaceBetween,
-    marginBottom: spacing.md,
-  },
-  seeAllText: {
-    fontSize: typography.body1,
+  heroSubtitle: {
+    fontSize: isTablet() ? typography.h5 : typography.h6,
     fontWeight: "600",
-  },
-  actionsGrid: {
-    gap: spacing.sm,
-  },
-  actionCard: {
-    backgroundColor: colors.surface,
-    borderRadius: spacing.md,
-    borderLeftWidth: 4,
-    ...commonStyles.shadow,
+    color: colors.text,
     marginBottom: spacing.sm,
+    textAlign: "center",
   },
-  actionContent: {
-    ...commonStyles.row,
-    padding: spacing.md,
-    alignItems: "center",
-  },
-  actionIcon: {
-    width: wp(12),
-    height: wp(12),
-    borderRadius: wp(6),
-    ...commonStyles.center,
-    marginRight: spacing.md,
-  },
-  actionText: {
-    flex: 1,
-  },
-  actionTitle: {
-    fontSize: typography.h6,
-    fontWeight: "600",
+  heroDescription: {
+    fontSize: typography.body1,
     color: colors.text,
-    marginBottom: spacing.xs / 2,
+    textAlign: "center",
+    opacity: 0.9,
   },
-  actionDescription: {
-    fontSize: typography.body2,
-    color: colors.textSecondary,
-  },
-  statsGrid: {
+  aiStatusBadge: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     gap: spacing.sm,
-    justifyContent: "space-between",
+  },
+  aiStatusIndicator: {
+    width: wp(2),
+    height: wp(2),
+    borderRadius: wp(1),
+  },
+  aiStatusText: {
+    fontSize: typography.body2,
+    color: colors.text,
+    fontWeight: "500",
+  },
+  statsContainer: {
+    flexDirection: "row",
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.lg,
+    gap: spacing.sm,
   },
   statCard: {
+    flex: 1,
     backgroundColor: colors.surface,
-    borderRadius: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.outline,
+  },
+  statContent: {
+    alignItems: "center",
     padding: spacing.md,
-    width: getCardWidth(2, spacing.lg),
-    ...commonStyles.center,
-    ...commonStyles.shadow,
   },
-  statIcon: {
-    width: wp(10),
-    height: wp(10),
-    borderRadius: wp(5),
-    ...commonStyles.center,
-    marginBottom: spacing.xs,
-  },
-  statValue: {
-    fontSize: typography.h5,
-    fontWeight: "800",
-    marginBottom: spacing.xs / 2,
+  statNumber: {
+    fontSize: typography.h4,
+    fontWeight: "700",
+    color: colors.text,
+    marginVertical: spacing.xs,
   },
   statLabel: {
     fontSize: typography.caption,
     color: colors.textSecondary,
     textAlign: "center",
   },
-  coursesScrollContent: {
-    paddingRight: spacing.lg,
-  },
-  courseCard: {
+  actionsCard: {
     backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.outline,
     borderRadius: spacing.md,
-    marginRight: spacing.md,
-    width: wp(70),
-    ...commonStyles.shadow,
+    margin: spacing.md,
   },
-  courseGradient: {
+  actionsContent: {
+    padding: spacing.lg,
+  },
+  actionsHeader: {
+    marginBottom: spacing.lg,
+  },
+  actionsTitle: {
+    fontSize: isTablet() ? typography.h4 : typography.h5,
+    fontWeight: "700",
+    color: colors.text,
+    marginBottom: spacing.xs,
+  },
+  actionsSubtitle: {
+    fontSize: typography.body2,
+    color: colors.textSecondary,
+  },
+  actionsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.md,
+  },
+  actionCard: {
+    width: (width - spacing.md * 3 - spacing.lg * 2) / 2,
     borderRadius: spacing.md,
     overflow: "hidden",
   },
-  courseContent: {
+  actionGradient: {
     padding: spacing.md,
+    minHeight: hp(15),
+    justifyContent: "space-between",
   },
-  courseHeader: {
-    ...commonStyles.row,
-    ...commonStyles.spaceBetween,
+  actionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: spacing.sm,
   },
-  levelChip: {
-    backgroundColor: "transparent",
+  aiPoweredBadge: {
+    backgroundColor: "rgba(6, 182, 212, 0.3)",
+    borderRadius: wp(2),
+    padding: spacing.xs,
+    marginLeft: spacing.xs,
   },
-  levelText: {
-    fontSize: typography.caption,
-    fontWeight: "600",
-  },
-  courseRating: {
-    ...commonStyles.row,
-    gap: spacing.xs / 2,
-  },
-  ratingText: {
-    fontSize: typography.caption,
-    color: colors.textSecondary,
-    fontWeight: "600",
-  },
-  courseTitle: {
+  actionTitle: {
     fontSize: typography.h6,
     fontWeight: "700",
     color: colors.text,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
-  courseStats: {
-    ...commonStyles.row,
-    marginBottom: spacing.sm,
+  actionDescription: {
+    fontSize: typography.body2,
+    color: colors.text,
+    opacity: 0.9,
   },
-  courseStat: {
-    ...commonStyles.row,
-    gap: spacing.xs / 2,
-  },
-  courseStatText: {
-    fontSize: typography.caption,
-    color: colors.textSecondary,
-  },
-  progressContainer: {
-    marginTop: spacing.xs,
-  },
-  progressText: {
-    fontSize: typography.caption,
-    color: colors.textSecondary,
-    marginBottom: spacing.xs / 2,
-  },
-  progressBar: {
-    height: 4,
-    backgroundColor: `${colors.border}50`,
-    borderRadius: 2,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 2,
-  },
-  ctaCard: {
+  activityCard: {
     backgroundColor: colors.surface,
-    borderRadius: spacing.lg,
-    margin: spacing.lg,
-    overflow: "hidden",
-    ...commonStyles.shadow,
+    borderWidth: 1,
+    borderColor: colors.outline,
+    borderRadius: spacing.md,
+    margin: spacing.md,
   },
-  ctaGradient: {
-    padding: spacing.xl,
+  activityContent: {
+    padding: spacing.lg,
   },
-  ctaContent: {
-    ...commonStyles.center,
+  activityHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.lg,
+    gap: spacing.sm,
   },
-  ctaTitle: {
-    fontSize: isTablet() ? typography.h3 : typography.h4,
-    fontWeight: "800",
-    color: "white",
-    textAlign: "center",
-    marginBottom: spacing.sm,
+  activityTitle: {
+    fontSize: typography.h6,
+    fontWeight: "700",
+    color: colors.text,
   },
-  ctaDescription: {
-    fontSize: typography.body1,
-    color: "rgba(255, 255, 255, 0.9)",
-    textAlign: "center",
+  activityList: {
+    gap: spacing.md,
+  },
+  activityItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  activityIcon: {
+    width: wp(8),
+    height: wp(8),
+    borderRadius: wp(4),
+    backgroundColor: colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  activityInfo: {
+    flex: 1,
+  },
+  activityText: {
+    fontSize: typography.body2,
+    color: colors.text,
+    fontWeight: "500",
+    marginBottom: spacing.xs,
+  },
+  activityTime: {
+    fontSize: typography.caption,
+    color: colors.textSecondary,
+  },
+  pathCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.outline,
+    borderRadius: spacing.md,
+    margin: spacing.md,
+  },
+  pathContent: {
+    padding: spacing.lg,
+  },
+  pathHeader: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: spacing.lg,
   },
-  ctaButton: {
-    backgroundColor: "white",
-    ...commonStyles.row,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: spacing.md,
-    gap: spacing.xs,
+  pathIcon: {
+    width: wp(10),
+    height: wp(10),
+    borderRadius: wp(5),
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: spacing.md,
   },
-  ctaButtonText: {
-    fontSize: typography.body1,
+  pathText: {
+    flex: 1,
+  },
+  pathTitle: {
+    fontSize: typography.h6,
     fontWeight: "700",
-    color: colors.primary,
+    color: colors.text,
+    marginBottom: spacing.xs,
+  },
+  pathSubtitle: {
+    fontSize: typography.body2,
+    color: colors.textSecondary,
+  },
+  pathProgress: {
+    marginBottom: spacing.lg,
+  },
+  pathStep: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  pathStepIcon: {
+    width: wp(8),
+    height: wp(8),
+    borderRadius: wp(4),
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: spacing.md,
+  },
+  pathStepNumber: {
+    fontSize: typography.body2,
+    fontWeight: "700",
+    color: colors.text,
+  },
+  pathStepText: {
+    fontSize: typography.body2,
+    color: colors.text,
+    fontWeight: "500",
+  },
+  pathConnector: {
+    width: 2,
+    height: spacing.md,
+    backgroundColor: colors.outline,
+    marginLeft: wp(4) - 1,
+    marginBottom: spacing.sm,
+  },
+  pathButton: {
+    backgroundColor: colors.primary,
+    borderRadius: spacing.sm,
+  },
+  pathButtonContent: {
+    paddingVertical: spacing.sm,
+  },
+  dialogText: {
+    fontSize: typography.body2,
+    color: colors.textSecondary,
+    marginBottom: spacing.md,
+  },
+  featureList: {
+    marginBottom: spacing.md,
+  },
+  featureItem: {
+    fontSize: typography.body2,
+    color: colors.text,
+    marginBottom: spacing.xs,
+    paddingLeft: spacing.sm,
+  },
+  aiFab: {
+    position: "absolute",
+    bottom: spacing.xl,
+    right: spacing.lg,
+    backgroundColor: colors.accent,
   },
 });
 
