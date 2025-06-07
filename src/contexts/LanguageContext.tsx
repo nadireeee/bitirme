@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { fallbackT } from "../i18n/fallback";
 
 interface LanguageContextType {
   currentLanguage: string;
