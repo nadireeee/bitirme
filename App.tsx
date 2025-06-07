@@ -56,19 +56,19 @@ function MainTabs() {
           let iconName: keyof typeof Ionicons.glyphMap = "home";
 
           switch (route.name) {
-            case t("navigation.home"):
+            case "Home":
               iconName = focused ? "home" : "home-outline";
               break;
-            case t("navigation.courses"):
+            case "Courses":
               iconName = focused ? "book" : "book-outline";
               break;
-            case t("navigation.exercises"):
+            case "Exercises":
               iconName = focused ? "code-slash" : "code-slash-outline";
               break;
-            case t("navigation.aiChat"):
+            case "AIChat":
               iconName = focused ? "chatbubble" : "chatbubble-outline";
               break;
-            case t("navigation.profile"):
+            case "Profile":
               iconName = focused ? "person" : "person-outline";
               break;
           }
@@ -99,14 +99,31 @@ function MainTabs() {
         },
       })}
     >
-      <Tab.Screen name={t("navigation.home")} component={HomeScreen} />
-      <Tab.Screen name={t("navigation.courses")} component={CoursesScreen} />
       <Tab.Screen
-        name={t("navigation.exercises")}
-        component={ExercisesScreen}
+        name="Home"
+        component={HomeScreen}
+        options={{ title: t("navigation.home") }}
       />
-      <Tab.Screen name={t("navigation.aiChat")} component={AIChatScreen} />
-      <Tab.Screen name={t("navigation.profile")} component={ProfileScreen} />
+      <Tab.Screen
+        name="Courses"
+        component={CoursesScreen}
+        options={{ title: t("navigation.courses") }}
+      />
+      <Tab.Screen
+        name="Exercises"
+        component={ExercisesScreen}
+        options={{ title: t("navigation.exercises") }}
+      />
+      <Tab.Screen
+        name="AIChat"
+        component={AIChatScreen}
+        options={{ title: t("navigation.aiChat") }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: t("navigation.profile") }}
+      />
     </Tab.Navigator>
   );
 }
