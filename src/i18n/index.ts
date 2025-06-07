@@ -50,7 +50,8 @@ const initI18n = async () => {
         },
         lng: "tr", // Set default language immediately
         fallbackLng: "tr",
-        debug: __DEV__,
+        debug: false, // Disable debug to reduce console warnings
+        returnObjects: true, // Enable object returns for nested translations
         interpolation: {
           escapeValue: false,
         },
