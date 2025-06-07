@@ -49,7 +49,7 @@ const { width, height } = Dimensions.get("window");
 const CoursesScreen = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  // colors defined above as constant
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("all");
   const [selectedLanguage, setSelectedLanguage] = useState("all");
