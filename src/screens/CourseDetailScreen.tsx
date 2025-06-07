@@ -14,6 +14,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../contexts/ThemeContext";
+import { useSafeColors } from "../utils/colors";
 import responsive, {
   wp,
   hp,
@@ -249,7 +250,7 @@ const CourseDetailScreen = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Eğitmen Hakkında</Text>
         <Text style={styles.sectionText}>
-          Dr. Mehmet Yılmaz, 15 yılı aşkın deneyime sahip bir yazılım
+          Dr. Mehmet Yılmaz, 15 yılı aşkın deneyime sahip bir yaz��lım
           geliştirici ve eğitmendir. Microsoft, Google gibi büyük teknoloji
           şirketlerinde çalışmış ve binlerce öğrenciye programlama öğretmiştir.
         </Text>
