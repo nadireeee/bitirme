@@ -52,6 +52,8 @@ const initI18n = async () => {
         fallbackLng: "tr",
         debug: false, // Disable debug to reduce console warnings
         returnObjects: true, // Enable object returns for nested translations
+        returnEmptyString: false, // Return key if translation is empty
+        returnNull: false, // Don't return null
         interpolation: {
           escapeValue: false,
         },
@@ -63,6 +65,10 @@ const initI18n = async () => {
 
         // Ensure immediate availability
         initImmediate: false,
+
+        // Suppress warnings
+        missingKeyHandler: false,
+        saveMissing: false,
       });
 
     console.log("i18n initialized successfully");
