@@ -47,7 +47,7 @@ const { width, height } = Dimensions.get("window");
 const ForumScreen = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  // colors defined above as constant
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
