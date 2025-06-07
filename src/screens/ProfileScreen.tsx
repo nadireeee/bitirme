@@ -59,7 +59,7 @@ const { width, height } = Dimensions.get("window");
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
-  const { isDarkMode, toggleTheme, colors } = useTheme();
+  const { isDarkMode, toggleTheme } = useTheme();
   const { currentLanguage } = useLanguage();
   const [activeTab, setActiveTab] = useState("achievements");
 
