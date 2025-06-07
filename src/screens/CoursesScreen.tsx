@@ -28,6 +28,22 @@ import responsive, {
   isSmallPhone,
 } from "../utils/responsive";
 
+// Direct colors object to avoid context issues
+const colors = {
+  background: "#030712",
+  surface: "#0f172a",
+  text: "#f9fafb",
+  textSecondary: "#94a3b8",
+  outline: "#334155",
+  primary: "#3b82f6",
+  secondary: "#8b5cf6",
+  border: "#1e293b",
+  success: "#10b981",
+  warning: "#f59e0b",
+  error: "#ef4444",
+  card: "#0f172a",
+};
+
 const { width, height } = Dimensions.get("window");
 
 const CoursesScreen = () => {
