@@ -68,8 +68,8 @@ function MainTabs() {
             case "Courses":
               iconName = focused ? "book" : "book-outline";
               break;
-            case "Exercises":
-              iconName = focused ? "code-slash" : "code-slash-outline";
+            case "Forum":
+              iconName = focused ? "chatbubbles" : "chatbubbles-outline";
               break;
             case "AIChat":
               iconName = focused ? "chatbubble" : "chatbubble-outline";
