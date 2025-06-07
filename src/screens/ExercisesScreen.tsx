@@ -12,6 +12,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { Card, Chip, Button, ProgressBar } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
+import responsive, {
+  wp,
+  hp,
+  typography,
+  spacing,
+  commonStyles,
+  getGridColumns,
+  getCardWidth,
+  isTablet,
+  isSmallPhone,
+} from "../utils/responsive";
 
 const ExercisesScreen = () => {
   const navigation = useNavigation();
