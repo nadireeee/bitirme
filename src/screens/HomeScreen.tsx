@@ -903,9 +903,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: spacing.md,
     lineHeight: isTablet() ? typography.h1 * 1.5 : typography.h1 * 1.3,
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 5,
+    ...(Platform.OS === "ios" || Platform.OS === "android"
+      ? {
+          textShadowColor: "rgba(0, 0, 0, 0.3)",
+          textShadowOffset: { width: 1, height: 1 },
+          textShadowRadius: 5,
+        }
+      : {}),
   },
   heroDescription: {
     fontSize: isTablet() ? typography.h6 : typography.body1,
