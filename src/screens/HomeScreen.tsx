@@ -286,7 +286,11 @@ const HomeScreen = () => {
               styles.glowEffect,
               {
                 opacity: glowOpacity,
-                shadowColor: feature.color,
+                ...(Platform.OS === "ios" || Platform.OS === "android"
+                  ? {
+                      shadowColor: feature.color,
+                    }
+                  : {}),
               },
             ]}
           />
