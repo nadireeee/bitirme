@@ -38,12 +38,19 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const loadSavedLanguage = async () => {
     try {
+      setIsLoading(true);
       const savedLanguage = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
       if (savedLanguage && savedLanguage !== currentLanguage) {
         await changeLanguage(savedLanguage);
       }
     } catch (error) {
       console.error("Error loading saved language:", error);
+      // Ensure we have a fallback language
+      if (!currentLanguage) {
+        setCurrentLanguage("tr");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
