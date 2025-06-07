@@ -233,6 +233,8 @@ export const quizCategories: QuizCategory[] = [
   },
 ];
 
+import { additionalQuizQuestions } from "./additionalQuizQuestions";
+
 export const quizQuestions: QuizQuestion[] = [
   // Introduction to C++ Questions
   {
@@ -377,6 +379,7 @@ export const quizQuestions: QuizQuestion[] = [
     chapter: "Modern C++ Features",
     points: 35,
   },
+  ...additionalQuizQuestions,
 ];
 
 export const getQuestionsByCategory = (categoryId: string): QuizQuestion[] => {

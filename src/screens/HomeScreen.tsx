@@ -343,11 +343,19 @@ const HomeScreen = () => {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Popüler Kurslar</Text>
             <TouchableOpacity
-              onPress={() => navigation.navigate("Courses" as any)}
+              style={[styles.quickActionCard, { backgroundColor: "#8b5cf6" }]}
+              onPress={() => navigation.navigate("Main", { screen: "Forum" })}
             >
-              <Text style={[styles.seeAllText, { color: colors.primary }]}>
-                Tümünü Gör
-              </Text>
+              <Ionicons name="chatbubbles" size={wp(6)} color="#fff" />
+              <Text style={styles.quickActionText}>Forum</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.quickActionCard, { backgroundColor: "#f59e0b" }]}
+              onPress={() => navigation.navigate("Quiz")}
+            >
+              <Ionicons name="help-circle" size={wp(6)} color="#fff" />
+              <Text style={styles.quickActionText}>Sınavlar</Text>
             </TouchableOpacity>
           </View>
           <ScrollView
