@@ -2,13 +2,26 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Card } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
+import responsive, {
+  wp,
+  hp,
+  typography,
+  spacing,
+  commonStyles,
+  isTablet,
+  isSmallPhone,
+} from "../utils/responsive";
 
 const QuizScreen = () => {
   return (
     <View style={styles.container}>
       <Card style={styles.card}>
         <Card.Content style={styles.content}>
-          <Ionicons name="help-circle" size={64} color="#3b82f6" />
+          <Ionicons
+            name="help-circle"
+            size={isTablet() ? wp(15) : wp(18)}
+            color="#3b82f6"
+          />
           <Text style={styles.title}>Quiz Sistemi</Text>
           <Text style={styles.description}>
             C ve C++ bilginizi test edebileceğiniz quiz sistemi yakında
@@ -24,30 +37,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#030712",
-    padding: 20,
+    padding: spacing.lg,
     justifyContent: "center",
   },
   card: {
     backgroundColor: "#0f172a",
     borderWidth: 1,
     borderColor: "#334155",
+    borderRadius: spacing.lg,
+    maxWidth: isTablet() ? wp(70) : "100%",
+    alignSelf: "center",
   },
   content: {
     alignItems: "center",
-    padding: 40,
+    padding: isTablet() ? spacing.xxl * 1.5 : spacing.xxl,
   },
   title: {
-    fontSize: 24,
+    fontSize: isTablet() ? typography.h1 : typography.h3,
     fontWeight: "700",
     color: "#f9fafb",
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+    textAlign: "center",
   },
   description: {
-    fontSize: 16,
+    fontSize: isTablet() ? typography.h6 : typography.body1,
     color: "#64748b",
     textAlign: "center",
-    lineHeight: 24,
+    lineHeight: isTablet() ? typography.h6 * 1.5 : typography.body1 * 1.5,
+    paddingHorizontal: spacing.md,
   },
 });
 
