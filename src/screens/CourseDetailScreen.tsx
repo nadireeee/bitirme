@@ -40,6 +40,12 @@ const CourseDetailScreen = () => {
     textSecondary: "#94a3b8",
     outline: "#334155",
     primary: "#3b82f6",
+    secondary: "#8b5cf6",
+    border: "#1e293b",
+    success: "#10b981",
+    warning: "#f59e0b",
+    error: "#ef4444",
+    card: "#0f172a",
   };
   const [activeTab, setActiveTab] = useState("overview");
 
