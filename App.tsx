@@ -8,6 +8,11 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 
+import type {
+  RootStackParamList,
+  MainTabParamList,
+} from "./src/types/navigation";
+
 // Import i18n configuration
 import "./src/i18n";
 import { LanguageProvider } from "./src/contexts/LanguageContext";
