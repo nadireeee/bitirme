@@ -89,10 +89,25 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  // Fallback translation function
+  const t = (key: string, defaultValue?: string) => {
+    try {
+      const { t: i18nT } = useTranslation();
+      if (i18n.isInitialized) {
+        return i18nT(key, defaultValue);
+      } else {
+        return fallbackT(key, defaultValue, currentLanguage);
+      }
+    } catch (error) {
+      return fallbackT(key, defaultValue, currentLanguage);
+    }
+  };
+
   const contextValue: LanguageContextType = {
     currentLanguage,
     changeLanguage,
     supportedLanguages,
+    t,
   };
 
   return (
