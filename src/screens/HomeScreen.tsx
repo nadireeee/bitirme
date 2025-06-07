@@ -17,6 +17,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../contexts/ThemeContext";
 import LanguageSwitch from "../components/common/LanguageSwitch";
+import { useSafeColors } from "../utils/colors";
 import responsive, {
   wp,
   hp,
