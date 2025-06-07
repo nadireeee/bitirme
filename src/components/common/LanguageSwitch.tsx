@@ -4,6 +4,15 @@ import { Menu, Button, Divider } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useTranslation } from "react-i18next";
+import responsive, {
+  wp,
+  hp,
+  typography,
+  spacing,
+  commonStyles,
+  isTablet,
+  isSmallPhone,
+} from "../../utils/responsive";
 
 interface LanguageSwitchProps {
   style?: any;
