@@ -54,7 +54,6 @@ const LoginScreen = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
   const { isDarkMode } = useTheme();
-  const colors = useSafeColors();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
