@@ -7,6 +7,7 @@ interface LanguageContextType {
   currentLanguage: string;
   changeLanguage: (language: string) => Promise<void>;
   supportedLanguages: { code: string; name: string; nativeName: string }[];
+  t: (key: string, defaultValue?: string) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
