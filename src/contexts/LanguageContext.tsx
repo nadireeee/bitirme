@@ -23,14 +23,18 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { i18n } = useTranslation();
-  const [currentLanguage, setCurrentLanguage] = useState<string>(
-    i18n.language || "tr",
-  );
+  const [currentLanguage, setCurrentLanguage] = useState<string>("tr"); // Default to Turkish
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Set initial language from i18n if available
+    if (i18n.language) {
+      setCurrentLanguage(i18n.language);
+    }
+
     // Load saved language on app start
     loadSavedLanguage();
-  }, []);
+  }, [i18n.language]);
 
   const loadSavedLanguage = async () => {
     try {
