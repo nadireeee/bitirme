@@ -91,9 +91,10 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   // Fallback translation function
+  const { t: i18nT } = useTranslation();
+
   const t = (key: string, defaultValue?: string) => {
     try {
-      const { t: i18nT } = useTranslation();
       if (i18n.isInitialized) {
         return i18nT(key, defaultValue);
       } else {
