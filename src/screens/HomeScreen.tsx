@@ -576,7 +576,7 @@ const HomeScreen = () => {
               >
                 <TouchableOpacity
                   style={styles.primaryButton}
-                  onPress={() => navigation.navigate(t("navigation.courses"))}
+                  onPress={() => navigation.navigate("Courses" as any)}
                 >
                   <LinearGradient
                     colors={["rgba(255,255,255,0.9)", "rgba(255,255,255,0.8)"]}
