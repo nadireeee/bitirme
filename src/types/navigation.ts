@@ -3,6 +3,7 @@ export type RootStackParamList = {
   Main: undefined;
   CodeEditor: { exerciseId?: string };
   Quiz: { quizId?: string };
+  QuizStats: undefined;
   Forum: undefined;
   Progress: undefined;
   AIMentor: undefined;

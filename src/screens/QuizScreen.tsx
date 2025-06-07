@@ -23,13 +23,15 @@ import {
   quizCategories,
   QuizCategory,
   QuizQuestion,
+  TestResult,
   getQuestionsByCategory,
   getCategoriesByLevel,
 } from "../data/quizData";
+import { saveQuizResult } from "../utils/quizStorage";
 
 type LevelFilter = "all" | "beginner" | "intermediate" | "advanced";
 
-const QuizScreen = () => {
+const QuizScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
   const [selectedLevel, setSelectedLevel] = useState<LevelFilter>("all");
   const [selectedQuiz, setSelectedQuiz] = useState<QuizCategory | null>(null);
@@ -39,6 +41,7 @@ const QuizScreen = () => {
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [showResult, setShowResult] = useState(false);
   const [userAnswers, setUserAnswers] = useState<number[]>([]);
+  const [startTime, setStartTime] = useState<Date>(new Date());
 
   const levels = [
     { key: "all", label: "Tümü", labelEN: "All", color: "#64748b" },
@@ -82,6 +85,7 @@ const QuizScreen = () => {
     setScore(0);
     setUserAnswers([]);
     setShowResult(false);
+    setStartTime(new Date());
   };
 
   const handleAnswerSelect = (answerIndex: number) => {
@@ -104,6 +108,29 @@ const QuizScreen = () => {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedAnswer(null);
     } else {
+      // Quiz completed, save result
+      const endTime = new Date();
+      const timeSpent = Math.round(
+        (endTime.getTime() - startTime.getTime()) / 1000,
+      ); // seconds
+
+      const result: TestResult = {
+        quizId: selectedQuiz!.id,
+        score,
+        totalQuestions: quizQuestions.length,
+        correctAnswers: newAnswers.filter(
+          (answer, index) => answer === quizQuestions[index].correctAnswer,
+        ).length,
+        timeSpent,
+        completedAt: endTime,
+        answers: newAnswers.map((answer, index) => ({
+          questionId: quizQuestions[index].id,
+          selectedAnswer: answer,
+          isCorrect: answer === quizQuestions[index].correctAnswer,
+        })),
+      };
+
+      saveQuizResult(result);
       setShowResult(true);
     }
   };
@@ -311,10 +338,20 @@ const QuizScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Sınavlar ve Testler</Text>
-          <Text style={styles.subtitle}>
-            C/C++ bilginizi test edin ve seviyenizi ölçün
-          </Text>
+          <View style={styles.headerContent}>
+            <View style={styles.headerText}>
+              <Text style={styles.title}>Sınavlar ve Testler</Text>
+              <Text style={styles.subtitle}>
+                C/C++ bilginizi test edin ve seviyenizi ölçün
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.statsButton}
+              onPress={() => navigation.navigate("QuizStats")}
+            >
+              <Ionicons name="stats-chart" size={wp(6)} color="#3b82f6" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Level Filter */}
@@ -457,12 +494,28 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: spacing.lg,
   },
+  headerContent: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+  },
+  headerText: {
+    flex: 1,
+  },
   title: {
     fontSize: isTablet() ? typography.h2 : typography.h3,
     fontWeight: "700",
     color: "#f9fafb",
     marginBottom: spacing.xs,
     textAlign: "center",
+  },
+  statsButton: {
+    padding: spacing.sm,
+    borderRadius: spacing.sm,
+    backgroundColor: "rgba(59, 130, 246, 0.1)",
+    borderWidth: 1,
+    borderColor: "#3b82f6",
+    marginTop: spacing.xs,
   },
   subtitle: {
     fontSize: isTablet() ? typography.h6 : typography.body1,

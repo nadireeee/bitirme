@@ -25,6 +25,7 @@ import CoursesScreen from "./src/screens/CoursesScreen";
 import ExercisesScreen from "./src/screens/ExercisesScreen";
 import CodeEditorScreen from "./src/screens/CodeEditorScreen";
 import QuizScreen from "./src/screens/QuizScreen";
+import QuizStatsScreen from "./src/screens/QuizStatsScreen";
 import ForumScreen from "./src/screens/ForumScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
 import ProgressScreen from "./src/screens/ProgressScreen";
@@ -168,6 +169,11 @@ function AppNavigator() {
         name="Quiz"
         component={QuizScreen}
         options={{ title: t("navigation.quiz") }}
+      />
+      <Stack.Screen
+        name="QuizStats"
+        component={QuizStatsScreen}
+        options={{ title: "Quiz İstatistikleri" }}
       />
       <Stack.Screen
         name="Forum"
