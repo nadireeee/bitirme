@@ -56,8 +56,22 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const changeLanguage = async (language: string) => {
     try {
-      // Change i18n language
-      await i18n.changeLanguage(language);
+      // Ensure i18n is ready
+      if (i18n.isInitialized) {
+        await i18n.changeLanguage(language);
+      } else {
+        // If i18n is not ready, wait for it
+        await new Promise<void>((resolve) => {
+          if (i18n.isInitialized) {
+            resolve();
+          } else {
+            i18n.on("initialized", () => {
+              resolve();
+            });
+          }
+        });
+        await i18n.changeLanguage(language);
+      }
 
       // Update state
       setCurrentLanguage(language);
@@ -68,6 +82,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
       console.log(`Language changed to: ${language}`);
     } catch (error) {
       console.error("Error changing language:", error);
+      // At least update the state even if i18n fails
+      setCurrentLanguage(language);
     }
   };
 
