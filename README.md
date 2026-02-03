@@ -244,10 +244,3 @@ expo build:ios --type archive
 - **📱 Native Modules**: Platform specific özellikler
 - **☁️ Cloud Sync**: Çoklu cihaz senkronizasyonu
 
-## 📞 İletişim ve Destek
-
-Bu proje CodeMentor AI platformunun mobil versiyonudur. Web versiyonu ile sync halinde geliştirilmektedir.
-
----
-
-**CodeMentor AI** - AI destekli C/C++ öğrenme deneyimi 🚀
