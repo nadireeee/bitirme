@@ -1,798 +1,262 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Dimensions,
-  Animated,
-  Easing,
+  RefreshControl,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { Card, Button } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
-import { Card, Button, Avatar, Chip } from "react-native-paper";
+import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
-import { useTheme } from "../contexts/ThemeContext";
-import LanguageSwitch from "../components/common/LanguageSwitch";
+import {
+  COLORS,
+  TYPOGRAPHY,
+  SPACING,
+  RADIUS,
+  SHADOWS,
+  wp,
+  hp,
+  isSmallDevice,
+} from "../styles/designSystem";
 
-const { width, height } = Dimensions.get("window");
+interface QuickAction {
+  id: string;
+  title: string;
+  icon: string;
+  color: string;
+  screen: string;
+  params?: any;
+}
+
+const quickActions: QuickAction[] = [
+  {
+    id: "quiz",
+    title: "Quiz",
+    icon: "help-circle",
+    color: COLORS.success,
+    screen: "Quiz",
+  },
+  {
+    id: "playground",
+    title: "Kod Editörü",
+    icon: "code-slash",
+    color: COLORS.primary,
+    screen: "CodePlayground",
+  },
+  {
+    id: "courses",
+    title: "Kurslar",
+    icon: "book",
+    color: COLORS.info,
+    screen: "Main",
+    params: { screen: "Courses" },
+  },
+  {
+    id: "ai-chat",
+    title: "AI Asistan",
+    icon: "sparkles",
+    color: COLORS.warning,
+    screen: "Main",
+    params: { screen: "AIChat" },
+  },
+];
 
 const HomeScreen = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const [refreshing, setRefreshing] = useState(false);
+  const [userStats, setUserStats] = useState({
+    totalQuizzes: 12,
+    averageScore: 85,
+    streakCount: 5,
+  });
 
-  // Animation values
-  const [fadeAnim] = useState(new Animated.Value(0));
-  const [slideAnim] = useState(new Animated.Value(100));
-  const [scaleAnim] = useState(new Animated.Value(0.8));
-  const [rotateAnim] = useState(new Animated.Value(0));
-  const [pulseAnim] = useState(new Animated.Value(1));
-  const [floatAnim] = useState(new Animated.Value(0));
-  const [heroScale] = useState(new Animated.Value(0.9));
-
-  useEffect(() => {
-    // Hero entrance animation - simplified for web compatibility
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 1500,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 1200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 1000,
-        useNativeDriver: true,
-      }),
-      Animated.timing(heroScale, {
-        toValue: 1,
-        duration: 1500,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // Continuous animations - simplified
-    const rotateAnimation = Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 20000,
-        useNativeDriver: true,
-      }),
-    );
-
-    const pulseAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.05,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-
-    const floatAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(floatAnim, {
-          toValue: 1,
-          duration: 3000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(floatAnim, {
-          toValue: 0,
-          duration: 3000,
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-
-    rotateAnimation.start();
-    pulseAnimation.start();
-    floatAnimation.start();
-
-    return () => {
-      rotateAnimation.stop();
-      pulseAnimation.stop();
-      floatAnimation.stop();
-    };
-  }, []);
-
-  const features = [
-    {
-      icon: "bulb-outline",
-      title: t("home.features.aiLearning.title"),
-      description: t("home.features.aiLearning.description"),
-      color: "#3b82f6",
-      gradient: ["#3b82f6", "#1d4ed8"],
-    },
-    {
-      icon: "code-slash-outline",
-      title: t("home.features.interactiveEditor.title"),
-      description: t("home.features.interactiveEditor.description"),
-      color: "#8b5cf6",
-      gradient: ["#8b5cf6", "#7c3aed"],
-    },
-    {
-      icon: "people-outline",
-      title: t("home.features.activeCommunity.title"),
-      description: t("home.features.activeCommunity.description"),
-      color: "#10b981",
-      gradient: ["#10b981", "#059669"],
-    },
-    {
-      icon: "trophy-outline",
-      title: t("home.features.gamification.title"),
-      description: t("home.features.gamification.description"),
-      color: "#f59e0b",
-      gradient: ["#f59e0b", "#d97706"],
-    },
-  ];
-
-  const popularCourses = [
-    {
-      id: 1,
-      title: t("home.popularCourses.cFoundations.title"),
-      description: t("home.popularCourses.cFoundations.description"),
-      students: 1247,
-      rating: 4.8,
-      duration: "6 hafta",
-      level: t("userLevels.beginner"),
-      color: "#10b981",
-      gradient: ["#10b981", "#059669"],
-      progress: 0,
-    },
-    {
-      id: 2,
-      title: t("home.popularCourses.cppOop.title"),
-      description: t("home.popularCourses.cppOop.description"),
-      students: 892,
-      rating: 4.9,
-      duration: "8 hafta",
-      level: t("userLevels.intermediate"),
-      color: "#3b82f6",
-      gradient: ["#3b82f6", "#1d4ed8"],
-      progress: 65,
-    },
-    {
-      id: 3,
-      title: t("home.popularCourses.dataStructures.title"),
-      description: t("home.popularCourses.dataStructures.description"),
-      students: 634,
-      rating: 4.7,
-      duration: "10 hafta",
-      level: t("userLevels.advanced"),
-      color: "#ef4444",
-      gradient: ["#ef4444", "#dc2626"],
-      progress: 0,
-    },
-  ];
-
-  const stats = [
-    {
-      label: t("home.stats.users"),
-      value: "12,847",
-      icon: "people",
-      color: "#3b82f6",
-    },
-    {
-      label: t("home.stats.courses"),
-      value: "25+",
-      icon: "book",
-      color: "#8b5cf6",
-    },
-    {
-      label: t("home.stats.exercises"),
-      value: "500+",
-      icon: "code-slash",
-      color: "#10b981",
-    },
-    {
-      label: t("home.stats.successRate"),
-      value: "%95",
-      icon: "trophy",
-      color: "#f59e0b",
-    },
-  ];
-
-  const AnimatedFeatureCard = ({ feature, index }) => {
-    const [cardScale] = useState(new Animated.Value(1));
-    const [cardRotate] = useState(new Animated.Value(0));
-    const [glowOpacity] = useState(new Animated.Value(0));
-
-    const handlePressIn = () => {
-      Animated.parallel([
-        Animated.timing(cardScale, {
-          toValue: 0.95,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-        Animated.timing(cardRotate, {
-          toValue: 1,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-        Animated.timing(glowOpacity, {
-          toValue: 1,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    };
-
-    const handlePressOut = () => {
-      Animated.parallel([
-        Animated.timing(cardScale, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(cardRotate, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(glowOpacity, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    };
-
-    const rotateInterpolate = cardRotate.interpolate({
-      inputRange: [0, 1],
-      outputRange: ["0deg", "3deg"],
-    });
-
-    return (
-      <Animated.View
-        style={[
-          {
-            transform: [{ scale: cardScale }, { rotate: rotateInterpolate }],
-          },
-        ]}
-      >
-        <TouchableOpacity
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          style={[styles.featureCard, { backgroundColor: colors.card }]}
-        >
-          {/* Glow effect */}
-          <Animated.View
-            style={[
-              styles.glowEffect,
-              {
-                opacity: glowOpacity,
-                shadowColor: feature.color,
-              },
-            ]}
-          />
-
-          <LinearGradient
-            colors={[`${feature.color}15`, `${feature.color}05`]}
-            style={styles.featureGradient}
-          >
-            <View style={styles.featureContent}>
-              <Animated.View
-                style={[
-                  styles.featureIconContainer,
-                  {
-                    backgroundColor: feature.color,
-                    transform: [{ scale: pulseAnim }],
-                  },
-                ]}
-              >
-                <Ionicons name={feature.icon as any} size={32} color="white" />
-              </Animated.View>
-              <Text style={[styles.featureTitle, { color: colors.text }]}>
-                {feature.title}
-              </Text>
-              <Text
-                style={[
-                  styles.featureDescription,
-                  { color: colors.textSecondary },
-                ]}
-              >
-                {feature.description}
-              </Text>
-            </View>
-          </LinearGradient>
-        </TouchableOpacity>
-      </Animated.View>
-    );
+  const onRefresh = async () => {
+    setRefreshing(true);
+    // Simulate refresh
+    setTimeout(() => setRefreshing(false), 1000);
   };
 
-  const AnimatedCourseCard = ({ course, index }) => {
-    const [cardScale] = useState(new Animated.Value(1));
-
-    const handlePress = () => {
-      Animated.sequence([
-        Animated.timing(cardScale, {
-          toValue: 0.95,
-          duration: 100,
-          useNativeDriver: true,
-        }),
-        Animated.timing(cardScale, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start();
-
-      navigation.navigate("CourseDetail", { courseId: course.id });
-    };
-
-    return (
-      <Animated.View
-        style={[
-          {
-            transform: [{ scale: cardScale }],
-          },
-        ]}
-      >
-        <TouchableOpacity onPress={handlePress}>
-          <Card style={[styles.courseCard, { backgroundColor: colors.card }]}>
-            <LinearGradient
-              colors={course.gradient}
-              style={styles.courseCardGradient}
-            >
-              <Animated.View
-                style={[
-                  {
-                    transform: [{ scale: pulseAnim }],
-                  },
-                ]}
-              >
-                <Ionicons name="code-slash" size={40} color="white" />
-              </Animated.View>
-            </LinearGradient>
-
-            <View style={styles.courseContent}>
-              <Chip
-                mode="outlined"
-                textStyle={[styles.chipText, { color: course.color }]}
-                style={[styles.levelChip, { borderColor: course.color }]}
-              >
-                {course.level}
-              </Chip>
-
-              <Text style={[styles.courseTitle, { color: colors.text }]}>
-                {course.title}
-              </Text>
-              <Text
-                style={[
-                  styles.courseDescription,
-                  { color: colors.textSecondary },
-                ]}
-              >
-                {course.description}
-              </Text>
-
-              <View style={styles.courseStats}>
-                <View style={styles.courseStat}>
-                  <Ionicons
-                    name="people"
-                    size={16}
-                    color={colors.textSecondary}
-                  />
-                  <Text
-                    style={[
-                      styles.courseStatText,
-                      { color: colors.textSecondary },
-                    ]}
-                  >
-                    {course.students}
-                  </Text>
-                </View>
-                <View style={styles.courseStat}>
-                  <Ionicons name="star" size={16} color="#fbbf24" />
-                  <Text
-                    style={[
-                      styles.courseStatText,
-                      { color: colors.textSecondary },
-                    ]}
-                  >
-                    {course.rating}
-                  </Text>
-                </View>
-                <View style={styles.courseStat}>
-                  <Ionicons
-                    name="time"
-                    size={16}
-                    color={colors.textSecondary}
-                  />
-                  <Text
-                    style={[
-                      styles.courseStatText,
-                      { color: colors.textSecondary },
-                    ]}
-                  >
-                    {course.duration}
-                  </Text>
-                </View>
-              </View>
-
-              {course.progress > 0 && (
-                <View style={styles.progressContainer}>
-                  <Text
-                    style={[
-                      styles.progressLabel,
-                      { color: colors.textSecondary },
-                    ]}
-                  >
-                    İlerleme: %{course.progress}
-                  </Text>
-                  <View
-                    style={[
-                      styles.progressBar,
-                      { backgroundColor: colors.border },
-                    ]}
-                  >
-                    <Animated.View
-                      style={[
-                        styles.progressFill,
-                        {
-                          backgroundColor: course.color,
-                          width: `${course.progress}%`,
-                        },
-                      ]}
-                    />
-                  </View>
-                </View>
-              )}
-            </View>
-          </Card>
-        </TouchableOpacity>
-      </Animated.View>
-    );
+  const handleQuickAction = (action: QuickAction) => {
+    if (action.params) {
+      navigation.navigate(action.screen as any, action.params);
+    } else {
+      navigation.navigate(action.screen as any);
+    }
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Animated Background Shapes */}
-      <Animated.View
-        style={[
-          styles.backgroundContainer,
-          {
-            transform: [
-              {
-                rotate: rotateAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ["0deg", "360deg"],
-                }),
-              },
-            ],
-          },
-        ]}
-      >
-        <View
-          style={[
-            styles.backgroundShape1,
-            { backgroundColor: `${colors.primary}08` },
-          ]}
-        />
-        <View
-          style={[
-            styles.backgroundShape2,
-            { backgroundColor: `${colors.secondary}06` },
-          ]}
-        />
-        <View
-          style={[
-            styles.backgroundShape3,
-            { backgroundColor: `${colors.success}04` },
-          ]}
-        />
-      </Animated.View>
-
+    <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[COLORS.primary]}
+            tintColor={COLORS.primary}
+          />
+        }
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero Section */}
-        <Animated.View
-          style={[
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }, { scale: heroScale }],
-            },
-          ]}
-        >
-          <LinearGradient
-            colors={[colors.primary, colors.secondary, `${colors.primary}90`]}
-            style={styles.headerGradient}
-          >
-            <View style={styles.header}>
-              <View style={styles.logoContainer}>
-                <Animated.View
-                  style={[
-                    styles.logoGradient,
-                    {
-                      transform: [{ scale: pulseAnim }],
-                    },
-                  ]}
-                >
-                  <LinearGradient
-                    colors={["rgba(255,255,255,0.3)", "rgba(255,255,255,0.1)"]}
-                    style={styles.logoGradient}
-                  >
-                    <Ionicons name="code-slash" size={32} color="white" />
-                  </LinearGradient>
-                </Animated.View>
-                <Text style={styles.logoText}>{t("home.title")}</Text>
-              </View>
-              <View style={styles.headerActions}>
-                <LanguageSwitch style={styles.languageSwitch} variant="icon" />
-                <TouchableOpacity style={styles.notificationButton}>
-                  <Ionicons
-                    name="notifications-outline"
-                    size={24}
-                    color="#f9fafb"
-                  />
-                </TouchableOpacity>
-              </View>
+        {/* Header Section */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <View>
+              <Text style={styles.welcomeText}>Merhaba! 👋</Text>
+              <Text style={styles.titleText}>CodeMentor AI</Text>
             </View>
-
-            <View style={styles.heroSection}>
-              <Animated.View
-                style={[
-                  {
-                    transform: [
-                      {
-                        translateY: floatAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, -10],
-                        }),
-                      },
-                    ],
-                  },
-                ]}
-              >
-                <Text style={styles.heroTitle}>{t("home.subtitle")}</Text>
-              </Animated.View>
-
-              <Text style={styles.heroDescription}>
-                {t("home.description")}
-              </Text>
-
-              <Animated.View
-                style={[
-                  styles.heroButtons,
-                  {
-                    transform: [{ scale: scaleAnim }],
-                  },
-                ]}
-              >
-                <TouchableOpacity
-                  style={styles.primaryButton}
-                  onPress={() => navigation.navigate(t("navigation.courses"))}
-                >
-                  <LinearGradient
-                    colors={["rgba(255,255,255,0.9)", "rgba(255,255,255,0.8)"]}
-                    style={styles.buttonGradient}
-                  >
-                    <Ionicons name="play" size={20} color={colors.primary} />
-                    <Text
-                      style={[
-                        styles.primaryButtonText,
-                        { color: colors.primary },
-                      ]}
-                    >
-                      {t("home.getStarted")}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.secondaryButton}
-                  onPress={() => navigation.navigate(t("navigation.aiChat"))}
-                >
-                  <Ionicons name="chatbubble-outline" size={20} color="white" />
-                  <Text style={styles.secondaryButtonText}>
-                    {t("home.watchDemo")}
-                  </Text>
-                </TouchableOpacity>
-              </Animated.View>
-            </View>
-          </LinearGradient>
-        </Animated.View>
-
-        {/* Stats Section */}
-        <Animated.View
-          style={[
-            styles.statsContainer,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <View style={styles.statsGrid}>
-            {stats.map((stat, index) => (
-              <Animated.View
-                key={index}
-                style={[
-                  {
-                    opacity: fadeAnim,
-                    transform: [
-                      { translateY: slideAnim },
-                      { scale: scaleAnim },
-                    ],
-                  },
-                ]}
-              >
-                <Card
-                  style={[styles.statCard, { backgroundColor: colors.card }]}
-                >
-                  <LinearGradient
-                    colors={[`${stat.color}15`, `${stat.color}05`]}
-                    style={styles.statGradient}
-                  >
-                    <View style={styles.statContent}>
-                      <Animated.View
-                        style={[
-                          styles.statIconContainer,
-                          {
-                            backgroundColor: stat.color,
-                            transform: [{ scale: pulseAnim }],
-                          },
-                        ]}
-                      >
-                        <Ionicons
-                          name={stat.icon as any}
-                          size={24}
-                          color="white"
-                        />
-                      </Animated.View>
-                      <Text style={[styles.statValue, { color: stat.color }]}>
-                        {stat.value}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.statLabel,
-                          { color: colors.textSecondary },
-                        ]}
-                      >
-                        {stat.label}
-                      </Text>
-                    </View>
-                  </LinearGradient>
-                </Card>
-              </Animated.View>
-            ))}
-          </View>
-        </Animated.View>
-
-        {/* Features Section */}
-        <Animated.View
-          style={[
-            styles.section,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            {t("home.features.title", "Neden CodeMentor AI?")} ✨
-          </Text>
-          <Text
-            style={[styles.sectionDescription, { color: colors.textSecondary }]}
-          >
-            {t(
-              "home.features.description",
-              "Modern teknoloji ile geleneksel öğrenme yöntemlerini birleştirerek size en iyi deneyimi sunuyoruz",
-            )}
-          </Text>
-
-          <View style={styles.featuresGrid}>
-            {features.map((feature, index) => (
-              <AnimatedFeatureCard
-                key={index}
-                feature={feature}
-                index={index}
-              />
-            ))}
-          </View>
-        </Animated.View>
-
-        {/* Popular Courses Section */}
-        <Animated.View
-          style={[
-            styles.section,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              {t("home.popularCourses.title")} 🎓
-            </Text>
             <TouchableOpacity
-              onPress={() => navigation.navigate(t("navigation.courses"))}
+              style={styles.profileButton}
+              onPress={() => navigation.navigate("Main", { screen: "Profile" })}
             >
-              <Text style={[styles.seeAllText, { color: colors.primary }]}>
-                {t("common.all", "Tümünü Gör")}
-              </Text>
+              <Ionicons name="person-circle" size={32} color={COLORS.primary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Stats Row */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{userStats.totalQuizzes}</Text>
+            <Text style={styles.statLabel}>Quiz</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{userStats.averageScore}%</Text>
+            <Text style={styles.statLabel}>Başarı</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{userStats.streakCount}</Text>
+            <Text style={styles.statLabel}>Seri</Text>
+          </View>
+        </View>
+
+        {/* Quick Actions */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Hızlı Başlat</Text>
+          <View style={styles.actionsGrid}>
+            {quickActions.map((action) => (
+              <TouchableOpacity
+                key={action.id}
+                style={styles.actionCard}
+                onPress={() => handleQuickAction(action)}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[styles.actionIcon, { backgroundColor: action.color }]}
+                >
+                  <Ionicons
+                    name={action.icon as any}
+                    size={24}
+                    color={COLORS.white}
+                  />
+                </View>
+                <Text style={styles.actionTitle}>{action.title}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Today's Goal */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Günlük Hedef</Text>
+          <Card style={styles.goalCard}>
+            <View style={styles.goalContent}>
+              <View style={styles.goalInfo}>
+                <Text style={styles.goalTitle}>C++ Fonksiyonları</Text>
+                <Text style={styles.goalSubtitle}>15 dakikalık ders</Text>
+              </View>
+              <TouchableOpacity style={styles.goalButton}>
+                <Ionicons name="play" size={20} color={COLORS.primary} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.progressBar}>
+              <View style={styles.progressFill} />
+            </View>
+            <Text style={styles.progressText}>3/5 tamamlandı</Text>
+          </Card>
+        </View>
+
+        {/* Continue Learning */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Öğrenmeye Devam Et</Text>
+            <TouchableOpacity>
+              <Text style={styles.seeAllText}>Tümünü Gör</Text>
             </TouchableOpacity>
           </View>
 
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            style={styles.coursesScrollView}
-            contentContainerStyle={styles.coursesContent}
+            contentContainerStyle={styles.coursesContainer}
           >
-            {popularCourses.map((course, index) => (
-              <AnimatedCourseCard
-                key={course.id}
-                course={course}
-                index={index}
-              />
+            {[1, 2, 3].map((item) => (
+              <Card key={item} style={styles.courseCard}>
+                <LinearGradient
+                  colors={[COLORS.primary, COLORS.info]}
+                  style={styles.courseGradient}
+                >
+                  <Text style={styles.courseTitle}>C++ Temelleri</Text>
+                  <Text style={styles.courseProgress}>Bölüm {item}/10</Text>
+                </LinearGradient>
+              </Card>
             ))}
           </ScrollView>
-        </Animated.View>
+        </View>
 
-        {/* CTA Section */}
-        <Animated.View
-          style={[
-            {
-              opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }],
-            },
-          ]}
-        >
-          <LinearGradient
-            colors={[colors.primary, colors.secondary]}
-            style={styles.ctaSection}
-          >
-            <Animated.View
-              style={[
-                {
-                  transform: [
-                    {
-                      translateY: floatAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, -5],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            >
-              <Text style={styles.ctaTitle}>
-                {t("home.joinCommunity.title")}
-              </Text>
-              <Text style={styles.ctaDescription}>
-                {t("home.joinCommunity.description")}
-              </Text>
-
-              <TouchableOpacity style={styles.ctaButton}>
-                <View style={styles.ctaButtonContent}>
-                  <Ionicons name="flash" size={20} color={colors.primary} />
-                  <Text
-                    style={[styles.ctaButtonText, { color: colors.primary }]}
-                  >
-                    {t("home.joinCommunity.join")}
-                  </Text>
+        {/* Recent Activity */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Son Aktiviteler</Text>
+          <View style={styles.activityList}>
+            {[
+              {
+                icon: "checkmark-circle",
+                text: "Variables quiz tamamlandı",
+                time: "2s önce",
+                color: COLORS.success,
+              },
+              {
+                icon: "code-slash",
+                text: "Hello World yazdın",
+                time: "1s önce",
+                color: COLORS.primary,
+              },
+              {
+                icon: "sparkles",
+                text: "AI'dan yardım aldın",
+                time: "5d önce",
+                color: COLORS.warning,
+              },
+            ].map((activity, index) => (
+              <View key={index} style={styles.activityItem}>
+                <View
+                  style={[
+                    styles.activityIcon,
+                    { backgroundColor: activity.color },
+                  ]}
+                >
+                  <Ionicons
+                    name={activity.icon as any}
+                    size={16}
+                    color={COLORS.white}
+                  />
                 </View>
-              </TouchableOpacity>
-            </Animated.View>
-          </LinearGradient>
-        </Animated.View>
+                <View style={styles.activityContent}>
+                  <Text style={styles.activityText}>{activity.text}</Text>
+                  <Text style={styles.activityTime}>{activity.time}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
       </ScrollView>
     </View>
   );
@@ -801,371 +265,222 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  backgroundContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: -1,
-  },
-  backgroundShape1: {
-    position: "absolute",
-    width: 400,
-    height: 400,
-    borderRadius: 200,
-    top: -150,
-    right: -150,
-  },
-  backgroundShape2: {
-    position: "absolute",
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    bottom: 200,
-    left: -100,
-  },
-  backgroundShape3: {
-    position: "absolute",
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    top: height * 0.5,
-    right: -50,
+    backgroundColor: COLORS.background,
   },
   scrollView: {
     flex: 1,
   },
-  headerGradient: {
-    paddingTop: 20,
-    paddingBottom: 50,
+  scrollContent: {
+    paddingBottom: SPACING[20],
   },
   header: {
+    paddingHorizontal: SPACING[4],
+    paddingTop: SPACING[8],
+    paddingBottom: SPACING[6],
+  },
+  headerContent: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    paddingTop: 40,
   },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
+  welcomeText: {
+    fontSize: TYPOGRAPHY.base,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING[1],
   },
-  languageSwitch: {
-    marginRight: 8,
+  titleText: {
+    fontSize: TYPOGRAPHY["3xl"],
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.text,
   },
-  logoContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  logoGradient: {
-    width: 50,
-    height: 50,
-    borderRadius: 15,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  logoText: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#f9fafb",
-    marginLeft: 12,
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
-  },
-  notificationButton: {
-    padding: 8,
-  },
-  heroSection: {
-    paddingHorizontal: 20,
-    alignItems: "center",
-  },
-  heroTitle: {
-    fontSize: 34,
-    fontWeight: "800",
-    color: "#f9fafb",
-    textAlign: "center",
-    marginBottom: 16,
-    lineHeight: 42,
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 5,
-  },
-  heroDescription: {
-    fontSize: 16,
-    color: "rgba(255, 255, 255, 0.9)",
-    textAlign: "center",
-    marginBottom: 32,
-    lineHeight: 24,
-    paddingHorizontal: 20,
-  },
-  heroButtons: {
-    flexDirection: "row",
-    gap: 16,
-    alignItems: "center",
-  },
-  primaryButton: {
-    borderRadius: 15,
-    overflow: "hidden",
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  buttonGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 28,
-    paddingVertical: 16,
-    gap: 8,
-  },
-  primaryButtonText: {
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  secondaryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderRadius: 15,
-    borderWidth: 2,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    gap: 8,
-  },
-  secondaryButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
+  profileButton: {
+    padding: SPACING[1],
   },
   statsContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 30,
-    marginTop: -25,
-  },
-  statsGrid: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 16,
+    marginHorizontal: SPACING[4],
+    marginBottom: SPACING[8],
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    paddingVertical: SPACING[4],
+    ...SHADOWS.sm,
   },
-  statCard: {
+  statItem: {
     flex: 1,
-    minWidth: (width - 72) / 2,
-    borderRadius: 20,
-    elevation: 6,
-    overflow: "hidden",
-  },
-  statGradient: {
-    padding: 20,
-  },
-  statContent: {
     alignItems: "center",
   },
-  statIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 12,
+  statDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: COLORS.border,
   },
-  statValue: {
-    fontSize: 24,
-    fontWeight: "800",
-    marginBottom: 4,
+  statNumber: {
+    fontSize: TYPOGRAPHY["2xl"],
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.text,
+    marginBottom: SPACING[1],
   },
   statLabel: {
-    fontSize: 12,
-    textAlign: "center",
-    fontWeight: "500",
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.textSecondary,
   },
   section: {
-    paddingHorizontal: 20,
-    paddingVertical: 30,
-  },
-  sectionTitle: {
-    fontSize: 26,
-    fontWeight: "800",
-    marginBottom: 8,
-  },
-  sectionDescription: {
-    fontSize: 16,
-    lineHeight: 24,
-    marginBottom: 30,
+    marginBottom: SPACING[8],
+    paddingHorizontal: SPACING[4],
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: SPACING[4],
+  },
+  sectionTitle: {
+    fontSize: TYPOGRAPHY.xl,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    color: COLORS.text,
+    marginBottom: SPACING[4],
   },
   seeAllText: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.primary,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
-  featuresGrid: {
+  actionsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 16,
+    gap: SPACING[3],
   },
-  featureCard: {
-    width: (width - 56) / 2,
-    borderRadius: 20,
-    elevation: 6,
-    overflow: "hidden",
-  },
-  glowEffect: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  featureGradient: {
-    padding: 24,
-  },
-  featureContent: {
+  actionCard: {
+    width: (wp(100) - SPACING[4] * 2 - SPACING[3]) / 2,
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    padding: SPACING[4],
     alignItems: "center",
+    ...SHADOWS.sm,
   },
-  featureIconContainer: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+  actionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
     justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
+    marginBottom: SPACING[3],
   },
-  featureTitle: {
-    fontSize: 16,
-    fontWeight: "700",
+  actionTitle: {
+    fontSize: TYPOGRAPHY.sm,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
+    color: COLORS.text,
     textAlign: "center",
-    marginBottom: 8,
   },
-  featureDescription: {
-    fontSize: 13,
-    textAlign: "center",
-    lineHeight: 18,
+  goalCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    padding: SPACING[4],
+    ...SHADOWS.sm,
   },
-  coursesScrollView: {
-    paddingLeft: 0,
-  },
-  coursesContent: {
-    paddingRight: 20,
-  },
-  courseCard: {
-    width: 300,
-    marginRight: 20,
-    borderRadius: 20,
-    elevation: 6,
-    overflow: "hidden",
-  },
-  courseCardGradient: {
-    height: 140,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  courseContent: {
-    padding: 20,
-  },
-  levelChip: {
-    alignSelf: "flex-start",
-    marginBottom: 12,
-    backgroundColor: "transparent",
-  },
-  chipText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  courseTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 8,
-    lineHeight: 24,
-  },
-  courseDescription: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 16,
-  },
-  courseStats: {
+  goalContent: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 12,
-  },
-  courseStat: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    marginBottom: SPACING[3],
   },
-  courseStatText: {
-    fontSize: 12,
+  goalInfo: {
+    flex: 1,
   },
-  progressContainer: {
-    marginTop: 8,
+  goalTitle: {
+    fontSize: TYPOGRAPHY.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    color: COLORS.text,
+    marginBottom: SPACING[1],
   },
-  progressLabel: {
-    fontSize: 12,
-    marginBottom: 4,
+  goalSubtitle: {
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.textSecondary,
+  },
+  goalButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: COLORS.primary,
   },
   progressBar: {
     height: 6,
+    backgroundColor: COLORS.border,
     borderRadius: 3,
+    marginBottom: SPACING[2],
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
+    width: "60%",
+    backgroundColor: COLORS.primary,
     borderRadius: 3,
   },
-  ctaSection: {
-    margin: 20,
-    borderRadius: 25,
-    padding: 40,
-    alignItems: "center",
-    elevation: 8,
-  },
-  ctaTitle: {
-    fontSize: 26,
-    fontWeight: "800",
-    color: "white",
+  progressText: {
+    fontSize: TYPOGRAPHY.xs,
+    color: COLORS.textSecondary,
     textAlign: "center",
-    marginBottom: 12,
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
   },
-  ctaDescription: {
-    fontSize: 16,
-    color: "rgba(255, 255, 255, 0.9)",
-    textAlign: "center",
-    lineHeight: 24,
-    marginBottom: 30,
+  coursesContainer: {
+    paddingRight: SPACING[4],
   },
-  ctaButton: {
-    backgroundColor: "white",
-    borderRadius: 15,
+  courseCard: {
+    width: wp(70),
+    marginRight: SPACING[3],
+    borderRadius: RADIUS.lg,
     overflow: "hidden",
-    elevation: 6,
+    ...SHADOWS.sm,
   },
-  ctaButtonContent: {
+  courseGradient: {
+    padding: SPACING[4],
+    height: 100,
+    justifyContent: "space-between",
+  },
+  courseTitle: {
+    fontSize: TYPOGRAPHY.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    color: COLORS.white,
+  },
+  courseProgress: {
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.white,
+    opacity: 0.9,
+  },
+  activityList: {
+    gap: SPACING[3],
+  },
+  activityItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 28,
-    paddingVertical: 16,
-    gap: 8,
+    backgroundColor: COLORS.surface,
+    padding: SPACING[3],
+    borderRadius: RADIUS.base,
+    ...SHADOWS.sm,
   },
-  ctaButtonText: {
-    fontSize: 16,
-    fontWeight: "700",
+  activityIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: SPACING[3],
+  },
+  activityContent: {
+    flex: 1,
+  },
+  activityText: {
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.text,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
+    marginBottom: SPACING[1],
+  },
+  activityTime: {
+    fontSize: TYPOGRAPHY.xs,
+    color: COLORS.textSecondary,
   },
 });
 

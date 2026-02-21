@@ -11,6 +11,17 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Card, Button, Chip } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
+import responsive, {
+  wp,
+  hp,
+  typography,
+  spacing,
+  commonStyles,
+  getGridColumns,
+  getCardWidth,
+  isTablet,
+  isSmallPhone,
+} from "../utils/responsive";
 
 const CodeEditorScreen = () => {
   const [code, setCode] = useState(`#include <iostream>
@@ -19,20 +30,20 @@ const CodeEditorScreen = () => {
 
 int main() {
     std::cout << "CodeMentor AI - C++ Playground!" << std::endl;
-    
+
     // Bir vektör oluşturalım
     std::vector<int> numbers = {5, 2, 8, 1, 9, 3};
-    
+
     // Vektörü sıralayalım
     std::sort(numbers.begin(), numbers.end());
-    
+
     // Sonuçları yazdıralım
     std::cout << "Sıralanmış sayılar: ";
     for (int num : numbers) {
         std::cout << num << " ";
     }
     std::cout << std::endl;
-    
+
     return 0;
 }`);
 
@@ -57,12 +68,12 @@ int main() {
 
 int main() {
     std::vector<int> arr = {1, 2, 3, 4, 5};
-    
+
     for (int i = 0; i < arr.size(); i++) {
         std::cout << arr[i] << " ";
     }
     std::cout << std::endl;
-    
+
     return 0;
 }`,
     },
@@ -78,7 +89,7 @@ private:
 
 public:
     Person(std::string n, int a) : name(n), age(a) {}
-    
+
     void introduce() {
         std::cout << "Hi, I'm " << name << " and I'm " << age << " years old." << std::endl;
     }
@@ -87,7 +98,7 @@ public:
 int main() {
     Person person("Alice", 25);
     person.introduce();
-    
+
     return 0;
 }`,
     },

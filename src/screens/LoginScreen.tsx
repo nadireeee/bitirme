@@ -20,15 +20,40 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "../contexts/ThemeContext";
 import { authService } from "../services/authService";
 import LanguageSwitch from "../components/common/LanguageSwitch";
+import responsive, {
+  wp,
+  hp,
+  typography,
+  spacing,
+  commonStyles,
+  getGridColumns,
+  getCardWidth,
+  isTablet,
+  isSmallPhone,
+} from "../utils/responsive";
+
+// Direct colors object to avoid context issues
+const colors = {
+  background: "#030712",
+  surface: "#0f172a",
+  text: "#f9fafb",
+  textSecondary: "#94a3b8",
+  outline: "#334155",
+  primary: "#3b82f6",
+  secondary: "#8b5cf6",
+  border: "#1e293b",
+  success: "#10b981",
+  warning: "#f59e0b",
+  error: "#ef4444",
+  card: "#0f172a",
+};
 
 const { width, height } = Dimensions.get("window");
-const isTablet = width > 768;
-const isMobile = width <= 480;
 
 const LoginScreen = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
-  const { isDarkMode, colors } = useTheme();
+  const { isDarkMode } = useTheme();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -67,7 +92,15 @@ const LoginScreen = () => {
       }),
     ]).start();
 
-    // Logo pulse animation
+    // Continuous animations
+    const rotateAnimation = Animated.loop(
+      Animated.timing(logoRotate, {
+        toValue: 1,
+        duration: 10000,
+        useNativeDriver: true,
+      }),
+    );
+
     const pulseAnimation = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
@@ -83,21 +116,12 @@ const LoginScreen = () => {
       ]),
     );
 
-    // Logo rotation
-    const rotateAnimation = Animated.loop(
-      Animated.timing(logoRotate, {
-        toValue: 1,
-        duration: 10000,
-        useNativeDriver: true,
-      }),
-    );
-
-    pulseAnimation.start();
     rotateAnimation.start();
+    pulseAnimation.start();
 
     return () => {
-      pulseAnimation.stop();
       rotateAnimation.stop();
+      pulseAnimation.stop();
     };
   }, []);
 
@@ -193,495 +217,401 @@ const LoginScreen = () => {
         return;
       }
 
-      setIsLoading(true);
-      // Simulate registration
-      setTimeout(() => {
-        setIsLoading(false);
-        Alert.alert(
-          t("common.success", "Başarılı"),
-          t("login.registrationSuccess", "Hesabınız başarıyla oluşturuldu!"),
-          [{ text: t("common.ok"), onPress: () => setIsLogin(true) }],
-        );
-      }, 2000);
+      setIsLoading(false);
+      Alert.alert(
+        t("login.success", "Başarılı"),
+        t("login.registrationSuccess", "Kayıt işlemi başarılı!"),
+      );
     }
   };
 
-  const handleQuickLogin = (user) => {
+  const handleDemoLogin = (user: any) => {
     setEmail(user.email);
     setPassword("demo123");
-
-    // Quick animation
-    Animated.timing(scaleAnim, {
-      toValue: 0.95,
-      duration: 100,
-      useNativeDriver: true,
-    }).start(() => {
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-    });
+    Alert.alert(
+      t("login.demoLogin", "Demo Giriş"),
+      t("login.demoLoginMessage", `${user.name} olarak giriş yapılıyor...`),
+      [
+        {
+          text: t("common.cancel", "İptal"),
+          style: "cancel",
+        },
+        {
+          text: t("common.ok", "Tamam"),
+          onPress: () => {
+            setTimeout(() => {
+              navigation.navigate("Main");
+            }, 1000);
+          },
+        },
+      ],
+    );
   };
 
-  const renderFormField = (
-    placeholder: string,
-    value: string,
-    setValue: (text: string) => void,
-    secureTextEntry: boolean = false,
-    icon: string = "mail",
-  ) => (
-    <View style={[styles.inputContainer, { backgroundColor: colors.card }]}>
-      <Ionicons name={icon as any} size={20} color={colors.textSecondary} />
-      <TextInput
-        style={[styles.textInput, { color: colors.text }]}
-        placeholder={placeholder}
-        placeholderTextColor={colors.textSecondary}
-        value={value}
-        onChangeText={setValue}
-        secureTextEntry={secureTextEntry && !showPassword}
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-      {secureTextEntry && (
-        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-          <Ionicons
-            name={showPassword ? "eye" : "eye-off"}
-            size={20}
-            color={colors.textSecondary}
-          />
-        </TouchableOpacity>
-      )}
-    </View>
-  );
-
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Animated Background Shapes */}
-      <Animated.View
-        style={[
-          styles.backgroundContainer,
-          {
-            transform: [
-              {
-                rotate: logoRotate.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ["0deg", "360deg"],
-                }),
-              },
-            ],
-          },
-        ]}
-      >
-        <View
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      {/* Animated Background */}
+      <View style={styles.backgroundContainer}>
+        <Animated.View
           style={[
             styles.backgroundShape1,
-            { backgroundColor: `${colors.primary}10` },
+            {
+              transform: [
+                {
+                  rotate: logoRotate.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ["0deg", "360deg"],
+                  }),
+                },
+              ],
+            },
           ]}
         />
-        <View
-          style={[
-            styles.backgroundShape2,
-            { backgroundColor: `${colors.secondary}08` },
-          ]}
-        />
-        <View
-          style={[
-            styles.backgroundShape3,
-            { backgroundColor: `${colors.success}06` },
-          ]}
-        />
-      </Animated.View>
+        <View style={styles.backgroundShape2} />
+        <View style={styles.backgroundShape3} />
+      </View>
 
-      <KeyboardAvoidingView
-        style={styles.keyboardContainer}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+        {/* Header */}
+        <Animated.View
+          style={[
+            styles.header,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
+            },
+          ]}
         >
-          {/* Header */}
-          <Animated.View
-            style={[
-              styles.header,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
-              },
-            ]}
-          >
-            <View style={styles.headerTop}>
-              <LanguageSwitch variant="button" style={styles.languageSwitch} />
-            </View>
-
+          <View style={styles.logoContainer}>
             <Animated.View
               style={[
-                styles.logoContainer,
-                { transform: [{ scale: pulseAnim }] },
+                styles.logoGradient,
+                {
+                  transform: [{ scale: pulseAnim }],
+                },
               ]}
             >
               <LinearGradient
-                colors={[colors.primary, colors.secondary]}
+                colors={["rgba(59, 130, 246, 0.8)", "rgba(139, 92, 246, 0.8)"]}
                 style={styles.logoGradient}
               >
                 <Ionicons
                   name="code-slash"
-                  size={isMobile ? 32 : 40}
+                  size={isSmallPhone() ? 32 : 40}
                   color="white"
                 />
               </LinearGradient>
             </Animated.View>
+          </View>
+          <Text style={styles.title}>{t("login.welcome", "Hoş Geldiniz")}</Text>
+          <Text style={styles.subtitle}>
+            {t(
+              "login.subtitle",
+              "CodeMentor AI'ya giriş yapın veya hesap oluşturun",
+            )}
+          </Text>
+        </Animated.View>
 
-            <Text style={[styles.appTitle, { color: colors.text }]}>
-              CodeMentor AI
-            </Text>
-            <Text style={[styles.appSubtitle, { color: colors.textSecondary }]}>
-              {t("login.subtitle", "C/C++ öğrenmenin en akıllı yolu")}
-            </Text>
-          </Animated.View>
+        {/* Language Switch */}
+        <View style={styles.languageContainer}>
+          <LanguageSwitch />
+        </View>
 
-          {/* Demo Users */}
-          <Animated.View
-            style={[
-              styles.demoSection,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-              },
-            ]}
-          >
-            <Text style={[styles.demoTitle, { color: colors.text }]}>
-              ⚡ {t("login.demoUsers")} - {t("login.quickLogin")}
-            </Text>
-            <View style={styles.demoUsersContainer}>
-              {demoUsers.map((user, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.demoUserCard,
-                    { backgroundColor: colors.card },
-                  ]}
-                  onPress={() => handleQuickLogin(user)}
-                >
-                  <LinearGradient
-                    colors={[`${user.color}20`, `${user.color}10`]}
-                    style={styles.demoUserGradient}
-                  >
-                    <Text style={styles.demoUserAvatar}>{user.avatar}</Text>
-                    <Text style={[styles.demoUserName, { color: colors.text }]}>
-                      {user.name}
-                    </Text>
-                    <Chip
-                      mode="outlined"
-                      style={[
-                        styles.demoUserLevel,
-                        { borderColor: user.color },
-                      ]}
-                      textStyle={[
-                        styles.demoUserLevelText,
-                        { color: user.color },
-                      ]}
-                    >
-                      {t(`userLevels.${user.level.toLowerCase()}`, user.level)}
-                    </Chip>
-                  </LinearGradient>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </Animated.View>
-
-          {/* Main Form */}
-          <Animated.View
-            style={[
-              styles.formContainer,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
-              },
-            ]}
-          >
-            <Card style={[styles.formCard, { backgroundColor: colors.card }]}>
-              <LinearGradient
-                colors={[`${colors.primary}05`, `${colors.secondary}03`]}
-                style={styles.formGradient}
+        {/* Demo Users */}
+        <Animated.View
+          style={[
+            styles.demoSection,
+            {
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+        >
+          <Text style={styles.demoTitle}>
+            {t("login.quickDemo", "Hızlı Demo Girişi")}
+          </Text>
+          <View style={styles.demoUsers}>
+            {demoUsers.map((user, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.demoUser,
+                  { backgroundColor: colors.surface, borderColor: user.color },
+                ]}
+                onPress={() => handleDemoLogin(user)}
               >
-                {/* Tabs */}
-                <View style={styles.tabsContainer}>
-                  <TouchableOpacity
+                <Text style={styles.demoAvatar}>{user.avatar}</Text>
+                <Text style={[styles.demoName, { color: colors.text }]}>
+                  {user.name}
+                </Text>
+                <Chip
+                  mode="outlined"
+                  style={[styles.demoLevel, { borderColor: user.color }]}
+                  textStyle={[styles.demoLevelText, { color: user.color }]}
+                >
+                  {user.level}
+                </Chip>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Animated.View>
+
+        {/* Login/Register Form */}
+        <Animated.View
+          style={[
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
+          <Card style={[styles.formCard, { backgroundColor: colors.surface }]}>
+            <Card.Content style={styles.formContent}>
+              {/* Tab Switcher */}
+              <View style={styles.tabContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.tab,
+                    isLogin && styles.activeTab,
+                    { borderColor: colors.primary },
+                  ]}
+                  onPress={() => setIsLogin(true)}
+                >
+                  <Text
                     style={[
-                      styles.tab,
+                      styles.tabText,
                       {
-                        backgroundColor: isLogin
-                          ? colors.primary
-                          : "transparent",
+                        color: isLogin ? colors.primary : colors.textSecondary,
                       },
                     ]}
-                    onPress={() => setIsLogin(true)}
                   >
-                    <Text
-                      style={[
-                        styles.tabText,
-                        { color: isLogin ? "white" : colors.textSecondary },
-                      ]}
-                    >
-                      {t("login.title")}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
+                    {t("login.signIn", "Giriş Yap")}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.tab,
+                    !isLogin && styles.activeTab,
+                    { borderColor: colors.primary },
+                  ]}
+                  onPress={() => setIsLogin(false)}
+                >
+                  <Text
                     style={[
-                      styles.tab,
+                      styles.tabText,
                       {
-                        backgroundColor: !isLogin
-                          ? colors.primary
-                          : "transparent",
+                        color: !isLogin ? colors.primary : colors.textSecondary,
                       },
                     ]}
-                    onPress={() => setIsLogin(false)}
                   >
-                    <Text
-                      style={[
-                        styles.tabText,
-                        { color: !isLogin ? "white" : colors.textSecondary },
-                      ]}
-                    >
-                      {t("login.register")}
+                    {t("login.signUp", "Kayıt Ol")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Form Fields */}
+              {!isLogin && (
+                <View style={styles.nameRow}>
+                  <View style={[styles.nameField, { marginRight: 8 }]}>
+                    <Text style={[styles.inputLabel, { color: colors.text }]}>
+                      {t("login.firstName", "Ad")}
                     </Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: colors.background,
+                          color: colors.text,
+                          borderColor: colors.outline,
+                        },
+                      ]}
+                      placeholder={t("login.firstName", "Ad")}
+                      placeholderTextColor={colors.textSecondary}
+                      value={firstName}
+                      onChangeText={setFirstName}
+                    />
+                  </View>
+                  <View style={[styles.nameField, { marginLeft: 8 }]}>
+                    <Text style={[styles.inputLabel, { color: colors.text }]}>
+                      {t("login.lastName", "Soyad")}
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: colors.background,
+                          color: colors.text,
+                          borderColor: colors.outline,
+                        },
+                      ]}
+                      placeholder={t("login.lastName", "Soyad")}
+                      placeholderTextColor={colors.textSecondary}
+                      value={lastName}
+                      onChangeText={setLastName}
+                    />
+                  </View>
+                </View>
+              )}
+
+              <View style={styles.inputContainer}>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>
+                  {t("login.email", "E-posta")}
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.background,
+                      color: colors.text,
+                      borderColor: colors.outline,
+                    },
+                  ]}
+                  placeholder={t("login.emailPlaceholder", "ornek@email.com")}
+                  placeholderTextColor={colors.textSecondary}
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>
+                  {t("login.password", "Şifre")}
+                </Text>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={[
+                      styles.passwordInput,
+                      {
+                        backgroundColor: colors.background,
+                        color: colors.text,
+                        borderColor: colors.outline,
+                      },
+                    ]}
+                    placeholder={t("login.passwordPlaceholder", "Şifreniz")}
+                    placeholderTextColor={colors.textSecondary}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                  />
+                  <TouchableOpacity
+                    style={styles.eyeButton}
+                    onPress={() => setShowPassword(!showPassword)}
+                  >
+                    <Ionicons
+                      name={showPassword ? "eye" : "eye-off"}
+                      size={20}
+                      color={colors.textSecondary}
+                    />
                   </TouchableOpacity>
                 </View>
+              </View>
 
-                {/* Form Fields */}
-                <View style={styles.formFields}>
-                  {!isLogin && (
-                    <>
-                      <View style={styles.nameRow}>
-                        {renderFormField(
-                          t("login.firstName", "Ad"),
-                          firstName,
-                          setFirstName,
-                          false,
-                          "person",
-                        )}
-                        {renderFormField(
-                          t("login.lastName", "Soyad"),
-                          lastName,
-                          setLastName,
-                          false,
-                          "person",
-                        )}
-                      </View>
-                    </>
-                  )}
-
-                  {renderFormField(
-                    t("login.email"),
-                    email,
-                    setEmail,
-                    false,
-                    "mail",
-                  )}
-
-                  {renderFormField(
-                    t("login.password"),
-                    password,
-                    setPassword,
-                    true,
-                    "lock-closed",
-                  )}
-
-                  {!isLogin && (
-                    <>
-                      {renderFormField(
-                        t("login.confirmPassword"),
-                        confirmPassword,
-                        setConfirmPassword,
-                        true,
-                        "lock-closed",
-                      )}
-                    </>
-                  )}
-
-                  {/* Options */}
-                  <View style={styles.optionsContainer}>
-                    {isLogin ? (
-                      <View style={styles.loginOptions}>
-                        <View style={styles.checkboxContainer}>
-                          <Checkbox
-                            status={rememberMe ? "checked" : "unchecked"}
-                            onPress={() => setRememberMe(!rememberMe)}
-                            color={colors.primary}
-                          />
-                          <Text
-                            style={[
-                              styles.checkboxLabel,
-                              { color: colors.text },
-                            ]}
-                          >
-                            {t("login.rememberMe", "Beni hatırla")}
-                          </Text>
-                        </View>
-                        <TouchableOpacity>
-                          <Text
-                            style={[
-                              styles.forgotPassword,
-                              { color: colors.primary },
-                            ]}
-                          >
-                            {t("login.forgotPassword")}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    ) : (
-                      <View style={styles.checkboxContainer}>
-                        <Checkbox
-                          status={acceptTerms ? "checked" : "unchecked"}
-                          onPress={() => setAcceptTerms(!acceptTerms)}
-                          color={colors.primary}
-                        />
-                        <Text
-                          style={[styles.checkboxLabel, { color: colors.text }]}
-                        >
-                          {t(
-                            "login.acceptTermsText",
-                            "Kullanım şartlarını kabul ediyorum",
-                          )}
-                        </Text>
-                      </View>
+              {!isLogin && (
+                <View style={styles.inputContainer}>
+                  <Text style={[styles.inputLabel, { color: colors.text }]}>
+                    {t("login.confirmPassword", "Şifre Tekrar")}
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.background,
+                        color: colors.text,
+                        borderColor: colors.outline,
+                      },
+                    ]}
+                    placeholder={t(
+                      "login.confirmPasswordPlaceholder",
+                      "Şifrenizi tekrar girin",
                     )}
-                  </View>
-
-                  {/* Submit Button */}
-                  <TouchableOpacity
-                    style={[
-                      styles.submitButton,
-                      { opacity: isLoading ? 0.7 : 1 },
-                    ]}
-                    onPress={handleSubmit}
-                    disabled={isLoading}
-                  >
-                    <LinearGradient
-                      colors={[colors.primary, colors.secondary]}
-                      style={styles.submitGradient}
-                    >
-                      {isLoading ? (
-                        <View style={styles.loadingContainer}>
-                          <Animated.View
-                            style={[
-                              styles.loadingSpinner,
-                              {
-                                transform: [
-                                  {
-                                    rotate: logoRotate.interpolate({
-                                      inputRange: [0, 1],
-                                      outputRange: ["0deg", "360deg"],
-                                    }),
-                                  },
-                                ],
-                              },
-                            ]}
-                          >
-                            <Ionicons name="refresh" size={20} color="white" />
-                          </Animated.View>
-                          <Text style={styles.loadingText}>
-                            {t("common.loading")}...
-                          </Text>
-                        </View>
-                      ) : (
-                        <>
-                          <Ionicons
-                            name={isLogin ? "log-in" : "person-add"}
-                            size={20}
-                            color="white"
-                          />
-                          <Text style={styles.submitText}>
-                            {isLogin
-                              ? t("login.loginButton")
-                              : t("login.registerButton")}
-                          </Text>
-                        </>
-                      )}
-                    </LinearGradient>
-                  </TouchableOpacity>
-
-                  {/* Social Login */}
-                  <View style={styles.socialContainer}>
-                    <View style={styles.dividerContainer}>
-                      <View
-                        style={[
-                          styles.divider,
-                          { backgroundColor: colors.border },
-                        ]}
-                      />
-                      <Text
-                        style={[
-                          styles.dividerText,
-                          { color: colors.textSecondary },
-                        ]}
-                      >
-                        {t("login.orContinueWith")}
-                      </Text>
-                      <View
-                        style={[
-                          styles.divider,
-                          { backgroundColor: colors.border },
-                        ]}
-                      />
-                    </View>
-
-                    <View style={styles.socialButtons}>
-                      <TouchableOpacity
-                        style={[
-                          styles.socialButton,
-                          { backgroundColor: colors.card },
-                        ]}
-                      >
-                        <Ionicons
-                          name="logo-github"
-                          size={24}
-                          color={colors.text}
-                        />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[
-                          styles.socialButton,
-                          { backgroundColor: colors.card },
-                        ]}
-                      >
-                        <Ionicons
-                          name="logo-google"
-                          size={24}
-                          color={colors.text}
-                        />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[
-                          styles.socialButton,
-                          { backgroundColor: colors.card },
-                        ]}
-                      >
-                        <Ionicons
-                          name="logo-apple"
-                          size={24}
-                          color={colors.text}
-                        />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
+                    placeholderTextColor={colors.textSecondary}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry={!showPassword}
+                  />
                 </View>
-              </LinearGradient>
-            </Card>
-          </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </View>
+              )}
+
+              {/* Options */}
+              <View style={styles.optionsContainer}>
+                {isLogin ? (
+                  <View style={styles.rememberMe}>
+                    <Checkbox
+                      status={rememberMe ? "checked" : "unchecked"}
+                      onPress={() => setRememberMe(!rememberMe)}
+                    />
+                    <Text style={[styles.checkboxText, { color: colors.text }]}>
+                      {t("login.rememberMe", "Beni hatırla")}
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.termsContainer}>
+                    <Checkbox
+                      status={acceptTerms ? "checked" : "unchecked"}
+                      onPress={() => setAcceptTerms(!acceptTerms)}
+                    />
+                    <Text style={[styles.checkboxText, { color: colors.text }]}>
+                      {t(
+                        "login.acceptTerms",
+                        "Kullanım şartlarını kabul ediyorum",
+                      )}
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Submit Button */}
+              <Button
+                mode="contained"
+                onPress={handleSubmit}
+                loading={isLoading}
+                disabled={isLoading}
+                style={[
+                  styles.submitButton,
+                  { backgroundColor: colors.primary },
+                ]}
+                labelStyle={styles.submitButtonText}
+              >
+                {isLogin
+                  ? t("login.signIn", "Giriş Yap")
+                  : t("login.signUp", "Kayıt Ol")}
+              </Button>
+
+              {/* Forgot Password */}
+              {isLogin && (
+                <TouchableOpacity style={styles.forgotPassword}>
+                  <Text
+                    style={[
+                      styles.forgotPasswordText,
+                      { color: colors.primary },
+                    ]}
+                  >
+                    {t("login.forgotPassword", "Şifremi unuttum")}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </Card.Content>
+          </Card>
+        </Animated.View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#030712",
   },
   backgroundContainer: {
     position: "absolute",
@@ -693,30 +623,30 @@ const styles = StyleSheet.create({
   },
   backgroundShape1: {
     position: "absolute",
-    width: isTablet ? 400 : 300,
-    height: isTablet ? 400 : 300,
-    borderRadius: isTablet ? 200 : 150,
-    top: -100,
-    right: -100,
+    width: wp(100),
+    height: wp(100),
+    backgroundColor: "rgba(59, 130, 246, 0.05)",
+    borderRadius: wp(50),
+    top: -wp(25),
+    right: -wp(25),
   },
   backgroundShape2: {
     position: "absolute",
-    width: isTablet ? 300 : 200,
-    height: isTablet ? 300 : 200,
-    borderRadius: isTablet ? 150 : 100,
-    bottom: 100,
-    left: -50,
+    width: wp(80),
+    height: wp(80),
+    backgroundColor: "rgba(139, 92, 246, 0.03)",
+    borderRadius: wp(40),
+    bottom: hp(20),
+    left: -wp(20),
   },
   backgroundShape3: {
     position: "absolute",
-    width: isTablet ? 200 : 150,
-    height: isTablet ? 200 : 150,
-    borderRadius: isTablet ? 100 : 75,
-    top: height * 0.4,
-    right: -30,
-  },
-  keyboardContainer: {
-    flex: 1,
+    width: wp(60),
+    height: wp(60),
+    backgroundColor: "rgba(16, 185, 129, 0.02)",
+    borderRadius: wp(30),
+    top: hp(60),
+    right: -wp(15),
   },
   scrollView: {
     flex: 1,
@@ -724,223 +654,201 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",
-    paddingHorizontal: isMobile ? 20 : isTablet ? 60 : 40,
-    paddingVertical: 40,
+    paddingHorizontal: isSmallPhone()
+      ? spacing.lg
+      : isTablet()
+        ? spacing.xxl + 20
+        : spacing.xxl,
+    paddingVertical: spacing.xxl,
   },
   header: {
     alignItems: "center",
-    marginBottom: 30,
-  },
-  headerTop: {
-    width: "100%",
-    alignItems: "flex-end",
-    marginBottom: 20,
-  },
-  languageSwitch: {
-    alignSelf: "flex-end",
+    marginBottom: spacing.xl,
   },
   logoContainer: {
-    marginBottom: 20,
+    marginBottom: spacing.lg,
   },
   logoGradient: {
-    width: isMobile ? 80 : isTablet ? 100 : 90,
-    height: isMobile ? 80 : isTablet ? 100 : 90,
-    borderRadius: isMobile ? 40 : isTablet ? 50 : 45,
+    width: isSmallPhone() ? wp(20) : isTablet() ? wp(15) : wp(18),
+    height: isSmallPhone() ? wp(20) : isTablet() ? wp(15) : wp(18),
+    borderRadius: isSmallPhone() ? wp(10) : isTablet() ? wp(7.5) : wp(9),
     justifyContent: "center",
     alignItems: "center",
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
   },
-  appTitle: {
-    fontSize: isMobile ? 28 : isTablet ? 36 : 32,
+  title: {
+    fontSize: isSmallPhone()
+      ? typography.h2
+      : isTablet()
+        ? typography.h1 * 1.2
+        : typography.h1,
     fontWeight: "800",
-    marginBottom: 8,
+    color: "#f9fafb",
+    marginBottom: spacing.xs,
     textAlign: "center",
   },
-  appSubtitle: {
-    fontSize: isMobile ? 14 : isTablet ? 18 : 16,
+  subtitle: {
+    fontSize: isSmallPhone()
+      ? typography.body2
+      : isTablet()
+        ? typography.h6
+        : typography.body1,
+    color: "#94a3b8",
     textAlign: "center",
-    maxWidth: isTablet ? 600 : 300,
+    maxWidth: isTablet() ? wp(60) : wp(80),
+  },
+  languageContainer: {
+    alignItems: "center",
+    marginBottom: spacing.lg,
   },
   demoSection: {
-    marginBottom: 30,
+    marginBottom: spacing.xl,
   },
   demoTitle: {
-    fontSize: isMobile ? 16 : isTablet ? 20 : 18,
-    fontWeight: "600",
+    fontSize: isSmallPhone() ? typography.h4 : typography.h3,
+    fontWeight: "700",
+    color: "#f9fafb",
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
-  demoUsersContainer: {
-    flexDirection: isTablet ? "row" : "column",
-    gap: 12,
+  demoUsers: {
+    flexDirection: isSmallPhone() ? "column" : "row",
     justifyContent: "center",
+    gap: spacing.sm,
   },
-  demoUserCard: {
-    borderRadius: 16,
-    elevation: 4,
-    overflow: "hidden",
-    flex: isTablet ? 1 : undefined,
-    maxWidth: isTablet ? undefined : "100%",
-  },
-  demoUserGradient: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+  demoUser: {
+    padding: isSmallPhone()
+      ? spacing.lg
+      : isTablet()
+        ? spacing.xl
+        : spacing.lg + 4,
+    borderRadius: spacing.md,
+    borderWidth: 2,
     alignItems: "center",
+    minWidth: isSmallPhone() ? wp(80) : wp(25),
+    marginBottom: isSmallPhone() ? spacing.sm : 0,
   },
-  demoUserAvatar: {
-    fontSize: isMobile ? 24 : 28,
-    marginBottom: 8,
+  demoAvatar: {
+    fontSize: isTablet() ? 32 : 24,
+    marginBottom: spacing.xs,
   },
-  demoUserName: {
-    fontSize: isMobile ? 14 : 16,
+  demoName: {
+    fontSize: isSmallPhone() ? typography.body2 : typography.body1,
     fontWeight: "600",
-    marginBottom: 6,
+    marginBottom: spacing.xs,
     textAlign: "center",
   },
-  demoUserLevel: {
+  demoLevel: {
     backgroundColor: "transparent",
   },
-  demoUserLevelText: {
-    fontSize: 10,
-    fontWeight: "600",
+  demoLevelText: {
+    fontSize: isSmallPhone() ? typography.caption : typography.body2,
   },
-  formContainer: {
-    maxWidth: isTablet ? 500 : "100%",
+  formCard: {
+    borderRadius: spacing.lg,
+    borderWidth: 1,
+    borderColor: "#334155",
+    maxWidth: isTablet() ? wp(70) : "100%",
     alignSelf: "center",
     width: "100%",
   },
-  formCard: {
-    borderRadius: 24,
-    elevation: 8,
-    overflow: "hidden",
+  formContent: {
+    padding: isSmallPhone()
+      ? spacing.lg
+      : isTablet()
+        ? spacing.xxl
+        : spacing.xl - 4,
   },
-  formGradient: {
-    padding: isMobile ? 24 : isTablet ? 32 : 28,
-  },
-  tabsContainer: {
+  tabContainer: {
     flexDirection: "row",
-    backgroundColor: "rgba(0, 0, 0, 0.05)",
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 24,
+    marginBottom: spacing.xl,
+    borderRadius: spacing.sm,
+    backgroundColor: "#1e293b",
+    padding: spacing.xs,
   },
   tab: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: spacing.sm,
     alignItems: "center",
+    borderRadius: spacing.xs,
+  },
+  activeTab: {
+    backgroundColor: "#3b82f6",
   },
   tabText: {
-    fontSize: isMobile ? 14 : 16,
+    fontSize: isSmallPhone() ? typography.body2 : typography.body1,
     fontWeight: "600",
-  },
-  formFields: {
-    gap: 16,
   },
   nameRow: {
-    flexDirection: isTablet ? "row" : "column",
-    gap: 16,
+    flexDirection: isSmallPhone() ? "column" : "row",
+    marginBottom: spacing.md,
+  },
+  nameField: {
+    flex: isSmallPhone() ? undefined : 1,
   },
   inputContainer: {
+    marginBottom: spacing.md,
+  },
+  inputLabel: {
+    fontSize: isSmallPhone() ? typography.body2 : typography.body1,
+    fontWeight: "600",
+    marginBottom: spacing.xs,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    fontSize: typography.body1,
+  },
+  passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-    elevation: 2,
-    gap: 12,
   },
-  textInput: {
+  passwordInput: {
     flex: 1,
-    fontSize: isMobile ? 14 : 16,
-    paddingVertical: 12,
+    borderWidth: 1,
+    borderRadius: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    fontSize: typography.body1,
+  },
+  eyeButton: {
+    position: "absolute",
+    right: spacing.md,
+    padding: spacing.xs,
   },
   optionsContainer: {
-    marginTop: 8,
+    marginBottom: spacing.lg,
   },
-  loginOptions: {
-    flexDirection: isTablet ? "row" : "column",
-    justifyContent: "space-between",
-    alignItems: isTablet ? "center" : "flex-start",
-    gap: isTablet ? 0 : 12,
-  },
-  checkboxContainer: {
+  rememberMe: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
   },
-  checkboxLabel: {
-    fontSize: isMobile ? 13 : 14,
+  termsContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  checkboxText: {
+    fontSize: isSmallPhone() ? typography.body2 : typography.body1,
+    marginLeft: spacing.xs,
     flex: 1,
-  },
-  forgotPassword: {
-    fontSize: isMobile ? 13 : 14,
-    fontWeight: "600",
   },
   submitButton: {
-    marginTop: 24,
-    borderRadius: 12,
-    overflow: "hidden",
-    elevation: 6,
+    borderRadius: spacing.sm,
+    paddingVertical: spacing.xs,
   },
-  submitGradient: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 16,
-    gap: 8,
-  },
-  submitText: {
-    color: "white",
-    fontSize: isMobile ? 16 : 18,
+  submitButtonText: {
+    fontSize: isSmallPhone() ? typography.body1 : typography.h6,
     fontWeight: "700",
-  },
-  loadingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  loadingSpinner: {
-    // No additional styles needed for rotation
-  },
-  loadingText: {
     color: "white",
-    fontSize: isMobile ? 16 : 18,
-    fontWeight: "700",
   },
-  socialContainer: {
-    marginTop: 24,
-  },
-  dividerContainer: {
-    flexDirection: "row",
+  forgotPassword: {
     alignItems: "center",
-    marginBottom: 20,
-    gap: 12,
+    marginTop: spacing.md,
   },
-  divider: {
-    flex: 1,
-    height: 1,
-  },
-  dividerText: {
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  socialButtons: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 16,
-  },
-  socialButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 4,
+  forgotPasswordText: {
+    fontSize: isSmallPhone() ? typography.body2 : typography.body1,
+    fontWeight: "600",
   },
 });
 

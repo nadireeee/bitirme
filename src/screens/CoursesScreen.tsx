@@ -2,265 +2,195 @@ import React, { useState } from "react";
 import {
   View,
   Text,
+  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  StyleSheet,
-  FlatList,
-  TextInput,
-  Dimensions,
+  RefreshControl,
 } from "react-native";
+import { Card, Button, Chip } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
-import { Card, Chip, Button, ProgressBar } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
-import { useTheme } from "../contexts/ThemeContext";
-import LanguageSwitch from "../components/common/LanguageSwitch";
+import {
+  COLORS,
+  TYPOGRAPHY,
+  SPACING,
+  RADIUS,
+  SHADOWS,
+  wp,
+  hp,
+  isSmallDevice,
+} from "../styles/designSystem";
 
-const { width, height } = Dimensions.get("window");
-const isTablet = width > 768;
-const isMobile = width <= 480;
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  level: "beginner" | "intermediate" | "advanced";
+  duration: string;
+  lessons: number;
+  enrolled: boolean;
+  progress: number;
+  category: string;
+  thumbnail: string[];
+}
+
+const courses: Course[] = [
+  {
+    id: "1",
+    title: "C++ Temelleri",
+    description: "C++ programlamanın temel kavramları",
+    level: "beginner",
+    duration: "4 hafta",
+    lessons: 12,
+    enrolled: true,
+    progress: 75,
+    category: "Temel",
+    thumbnail: [COLORS.primary, COLORS.info],
+  },
+  {
+    id: "2",
+    title: "Nesne Yönelimli Programlama",
+    description: "OOP konseptleri ve uygulamaları",
+    level: "intermediate",
+    duration: "6 hafta",
+    lessons: 18,
+    enrolled: true,
+    progress: 45,
+    category: "OOP",
+    thumbnail: [COLORS.success, COLORS.warning],
+  },
+  {
+    id: "3",
+    title: "Veri Yapıları",
+    description: "Temel veri yapıları ve algoritmalar",
+    level: "intermediate",
+    duration: "8 hafta",
+    lessons: 24,
+    enrolled: false,
+    progress: 0,
+    category: "Algoritma",
+    thumbnail: [COLORS.warning, COLORS.error],
+  },
+  {
+    id: "4",
+    title: "İleri C++ Teknikleri",
+    description: "Template'ler, STL ve modern C++",
+    level: "advanced",
+    duration: "10 hafta",
+    lessons: 30,
+    enrolled: false,
+    progress: 0,
+    category: "İleri",
+    thumbnail: [COLORS.error, COLORS.primary],
+  },
+];
+
+const levelColors = {
+  beginner: COLORS.success,
+  intermediate: COLORS.warning,
+  advanced: COLORS.error,
+};
+
+const levelLabels = {
+  beginner: "Başlangıç",
+  intermediate: "Orta",
+  advanced: "İleri",
+};
 
 const CoursesScreen = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
-  const { colors } = useTheme();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedLevel, setSelectedLevel] = useState("all");
-  const [selectedLanguage, setSelectedLanguage] = useState("all");
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<
+    "all" | "enrolled" | "available"
+  >("all");
 
-  const courses = [
-    {
-      id: 1,
-      title: "C Programlama Temelleri",
-      description:
-        "Sıfırdan başlayarak C programlama dilini öğrenin. Değişkenler, fonksiyonlar, döngüler ve daha fazlası.",
-      instructor: "Dr. Ahmet Yılmaz",
-      duration: "6 hafta",
-      level: "Başlangıç",
-      language: "C",
-      students: 1247,
-      rating: 4.8,
-      reviews: 324,
-      price: "Ücretsiz",
-      progress: 0,
-      isEnrolled: false,
-      chapters: 12,
-      totalLessons: 48,
-      tags: ["Basics", "Variables", "Functions"],
-      color: "#10b981",
-    },
-    {
-      id: 2,
-      title: "C++ ile Nesne Yönelimli Programlama",
-      description:
-        "OOP kavramlarını C++ ile pratiğe dökün. Sınıflar, kalıtım, polimorfizm ve encapsulation.",
-      instructor: "Prof. Elif Kara",
-      duration: "8 hafta",
-      level: "Orta",
-      language: "C++",
-      students: 892,
-      rating: 4.9,
-      reviews: 267,
-      price: "₺299",
-      progress: 35,
-      isEnrolled: true,
-      chapters: 15,
-      totalLessons: 62,
-      tags: ["OOP", "Classes", "Inheritance"],
-      color: "#3b82f6",
-    },
-    {
-      id: 3,
-      title: "Veri Yapıları ve Algoritmalar",
-      description:
-        "C++ ile veri yapıları ve algoritma analizi. Linked List, Stack, Queue, Trees ve Graph algoritmaları.",
-      instructor: "Dr. Mehmet Demir",
-      duration: "10 hafta",
-      level: "İleri",
-      language: "C++",
-      students: 634,
-      rating: 4.7,
-      reviews: 189,
-      price: "₺499",
-      progress: 0,
-      isEnrolled: false,
-      chapters: 20,
-      totalLessons: 85,
-      tags: ["Data Structures", "Algorithms", "Trees"],
-      color: "#ef4444",
-    },
-    {
-      id: 4,
-      title: "C++ STL ve Modern C++",
-      description:
-        "Standard Template Library kullanımı ve C++11/14/17/20 modern özellikler.",
-      instructor: "Mühendis Ayşe Çelik",
-      duration: "6 hafta",
-      level: "İleri",
-      language: "C++",
-      students: 456,
-      rating: 4.6,
-      reviews: 123,
-      price: "₺399",
-      progress: 80,
-      isEnrolled: true,
-      chapters: 12,
-      totalLessons: 45,
-      tags: ["STL", "Modern C++", "Templates"],
-      color: "#8b5cf6",
-    },
-  ];
-
-  const levels = ["all", "Başlangıç", "Orta", "İleri"];
-  const languages = ["all", "C", "C++"];
-
-  const filteredCourses = courses.filter((course) => {
-    const matchesSearch =
-      course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLevel =
-      selectedLevel === "all" || course.level === selectedLevel;
-    const matchesLanguage =
-      selectedLanguage === "all" || course.language === selectedLanguage;
-
-    return matchesSearch && matchesLevel && matchesLanguage;
-  });
-
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case "Başlangıç":
-        return "#10b981";
-      case "Orta":
-        return "#3b82f6";
-      case "İleri":
-        return "#ef4444";
-      default:
-        return "#64748b";
-    }
+  const onRefresh = async () => {
+    setRefreshing(true);
+    // Simulate refresh
+    setTimeout(() => setRefreshing(false), 1000);
   };
 
-  const renderCourseCard = ({ item: course }: any) => (
+  const filteredCourses = courses.filter((course) => {
+    if (selectedFilter === "enrolled") return course.enrolled;
+    if (selectedFilter === "available") return !course.enrolled;
+    return true;
+  });
+
+  const enrolledCourses = courses.filter((course) => course.enrolled);
+  const availableCourses = courses.filter((course) => !course.enrolled);
+
+  const handleCoursePress = (course: Course) => {
+    navigation.navigate("CourseDetail" as any, { courseId: course.id });
+  };
+
+  const renderCourseCard = (course: Course) => (
     <TouchableOpacity
-      onPress={() =>
-        navigation.navigate("CourseDetail", { courseId: course.id })
-      }
-      style={styles.courseCardContainer}
+      key={course.id}
+      style={styles.courseCard}
+      onPress={() => handleCoursePress(course)}
+      activeOpacity={0.7}
     >
-      <Card style={styles.courseCard}>
-        <LinearGradient
-          colors={[course.color, `${course.color}80`]}
-          style={styles.courseHeader}
-        >
-          <View style={styles.courseHeaderContent}>
-            <Ionicons name="code-slash" size={32} color="white" />
-            {course.isEnrolled && (
-              <View style={styles.enrolledBadge}>
-                <Ionicons name="checkmark-circle" size={16} color="white" />
-                <Text style={styles.enrolledText}>Kayıtlı</Text>
-              </View>
-            )}
-          </View>
-        </LinearGradient>
-
-        <Card.Content style={styles.courseContent}>
-          <View style={styles.courseMetaRow}>
-            <Chip
-              mode="outlined"
-              textStyle={[
-                styles.levelChipText,
-                { color: getLevelColor(course.level) },
-              ]}
-              style={[
-                styles.levelChip,
-                { borderColor: getLevelColor(course.level) },
-              ]}
-            >
-              {course.level}
-            </Chip>
-            <View style={styles.ratingContainer}>
-              <Ionicons name="star" size={16} color="#fbbf24" />
-              <Text style={styles.ratingText}>{course.rating}</Text>
-              <Text style={styles.reviewsText}>({course.reviews})</Text>
-            </View>
-          </View>
-
-          <Text style={styles.courseTitle}>{course.title}</Text>
-          <Text style={styles.courseDescription} numberOfLines={2}>
-            {course.description}
-          </Text>
-
-          <View style={styles.courseStatsRow}>
-            <View style={styles.courseStat}>
-              <Ionicons name="time-outline" size={16} color="#64748b" />
-              <Text style={styles.courseStatText}>{course.duration}</Text>
-            </View>
-            <View style={styles.courseStat}>
-              <Ionicons name="people-outline" size={16} color="#64748b" />
-              <Text style={styles.courseStatText}>{course.students}</Text>
-            </View>
-            <View style={styles.courseStat}>
-              <Ionicons name="book-outline" size={16} color="#64748b" />
-              <Text style={styles.courseStatText}>
-                {course.totalLessons} ders
-              </Text>
-            </View>
-          </View>
-
-          {course.isEnrolled && course.progress > 0 && (
-            <View style={styles.progressContainer}>
-              <View style={styles.progressHeader}>
-                <Text style={styles.progressLabel}>İlerleme</Text>
-                <Text style={styles.progressPercentage}>
-                  {course.progress}%
-                </Text>
-              </View>
-              <ProgressBar
-                progress={course.progress / 100}
-                color="#3b82f6"
-                style={styles.progressBar}
+      <LinearGradient colors={course.thumbnail} style={styles.courseGradient}>
+        <View style={styles.courseHeader}>
+          <Chip
+            mode="flat"
+            textStyle={[
+              styles.levelChipText,
+              { color: levelColors[course.level] },
+            ]}
+            style={[
+              styles.levelChip,
+              { backgroundColor: `${levelColors[course.level]}20` },
+            ]}
+          >
+            {levelLabels[course.level]}
+          </Chip>
+          {course.enrolled && (
+            <View style={styles.enrolledBadge}>
+              <Ionicons
+                name="checkmark-circle"
+                size={16}
+                color={COLORS.white}
               />
             </View>
           )}
+        </View>
 
-          <View style={styles.tagsContainer}>
-            {course.tags.slice(0, 3).map((tag, index) => (
-              <Chip
-                key={index}
-                mode="outlined"
-                style={styles.tagChip}
-                textStyle={styles.tagText}
-              >
-                {tag}
-              </Chip>
-            ))}
+        <View style={styles.courseContent}>
+          <Text style={styles.courseTitle}>{course.title}</Text>
+          <Text style={styles.courseDescription}>{course.description}</Text>
+
+          <View style={styles.courseMeta}>
+            <View style={styles.metaItem}>
+              <Ionicons name="time" size={14} color={COLORS.white} />
+              <Text style={styles.metaText}>{course.duration}</Text>
+            </View>
+            <View style={styles.metaItem}>
+              <Ionicons name="book" size={14} color={COLORS.white} />
+              <Text style={styles.metaText}>{course.lessons} ders</Text>
+            </View>
           </View>
 
-          <View style={styles.courseFooter}>
-            <Text style={styles.coursePrice}>{course.price}</Text>
-            <Button
-              mode={course.isEnrolled ? "outlined" : "contained"}
-              onPress={() =>
-                navigation.navigate("CourseDetail", { courseId: course.id })
-              }
-              style={styles.courseButton}
-              labelStyle={styles.courseButtonText}
-            >
-              {course.isEnrolled ? (
-                <>
-                  <Ionicons name="play" size={16} color="#3b82f6" />
-                  {" Devam Et"}
-                </>
-              ) : (
-                <>
-                  <Ionicons name="book-outline" size={16} color="white" />
-                  {" İncele"}
-                </>
-              )}
-            </Button>
-          </View>
-        </Card.Content>
-      </Card>
+          {course.enrolled && course.progress > 0 && (
+            <View style={styles.progressContainer}>
+              <View style={styles.progressBar}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    { width: `${course.progress}%` },
+                  ]}
+                />
+              </View>
+              <Text style={styles.progressText}>
+                %{course.progress} tamamlandı
+              </Text>
+            </View>
+          )}
+        </View>
+      </LinearGradient>
     </TouchableOpacity>
   );
 
@@ -269,95 +199,119 @@ const CoursesScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Kurslar</Text>
-        <Text style={styles.headerSubtitle}>
-          C ve C++ programlama dillerini AI destekli kurslarla öğrenin
-        </Text>
+        <TouchableOpacity style={styles.searchButton}>
+          <Ionicons name="search" size={24} color={COLORS.primary} />
+        </TouchableOpacity>
       </View>
 
-      {/* Search and Filters */}
-      <View style={styles.filtersContainer}>
-        <View style={styles.searchContainer}>
-          <Ionicons
-            name="search"
-            size={20}
-            color="#64748b"
-            style={styles.searchIcon}
+      <ScrollView
+        style={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[COLORS.primary]}
+            tintColor={COLORS.primary}
           />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Kurs ara..."
-            placeholderTextColor="#64748b"
-            value={searchTerm}
-            onChangeText={setSearchTerm}
-          />
+        }
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Filter Chips */}
+        <View style={styles.filterContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.filterChips}>
+              {[
+                { key: "all", label: "Tümü" },
+                { key: "enrolled", label: "Kayıtlı" },
+                { key: "available", label: "Mevcut" },
+              ].map((filter) => (
+                <TouchableOpacity
+                  key={filter.key}
+                  style={[
+                    styles.filterChip,
+                    selectedFilter === filter.key && styles.activeFilterChip,
+                  ]}
+                  onPress={() => setSelectedFilter(filter.key as any)}
+                >
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      selectedFilter === filter.key &&
+                        styles.activeFilterChipText,
+                    ]}
+                  >
+                    {filter.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
         </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.filterScrollView}
-        >
-          <Text style={styles.filterLabel}>Seviye:</Text>
-          {levels.map((level) => (
-            <TouchableOpacity
-              key={level}
-              onPress={() => setSelectedLevel(level)}
-              style={[
-                styles.filterChip,
-                selectedLevel === level && styles.activeFilterChip,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.filterChipText,
-                  selectedLevel === level && styles.activeFilterChipText,
-                ]}
-              >
-                {level === "all" ? "Tümü" : level}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        {/* Continue Learning Section */}
+        {enrolledCourses.length > 0 && selectedFilter !== "available" && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Öğrenmeye Devam Et</Text>
+              {selectedFilter === "all" && (
+                <TouchableOpacity onPress={() => setSelectedFilter("enrolled")}>
+                  <Text style={styles.seeAllText}>Tümünü Gör</Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
-          <Text style={[styles.filterLabel, { marginLeft: 16 }]}>Dil:</Text>
-          {languages.map((language) => (
-            <TouchableOpacity
-              key={language}
-              onPress={() => setSelectedLanguage(language)}
-              style={[
-                styles.filterChip,
-                selectedLanguage === language && styles.activeFilterChip,
-              ]}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalScroll}
             >
-              <Text
-                style={[
-                  styles.filterChipText,
-                  selectedLanguage === language && styles.activeFilterChipText,
-                ]}
-              >
-                {language === "all" ? "Tümü" : language}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+              {enrolledCourses.map(renderCourseCard)}
+            </ScrollView>
+          </View>
+        )}
 
-      {/* Courses List */}
-      <FlatList
-        data={filteredCourses}
-        renderItem={renderCourseCard}
-        keyExtractor={(item) => item.id.toString()}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.coursesList}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="book-outline" size={64} color="#64748b" />
+        {/* Available Courses Section */}
+        {availableCourses.length > 0 && selectedFilter !== "enrolled" && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Mevcut Kurslar</Text>
+              {selectedFilter === "all" && (
+                <TouchableOpacity
+                  onPress={() => setSelectedFilter("available")}
+                >
+                  <Text style={styles.seeAllText}>Tümünü Gör</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <View style={styles.coursesGrid}>
+              {availableCourses.map(renderCourseCard)}
+            </View>
+          </View>
+        )}
+
+        {/* All Courses (when filter is specific) */}
+        {selectedFilter !== "all" && (
+          <View style={styles.section}>
+            <View style={styles.coursesGrid}>
+              {filteredCourses.map(renderCourseCard)}
+            </View>
+          </View>
+        )}
+
+        {/* Empty State */}
+        {filteredCourses.length === 0 && (
+          <View style={styles.emptyState}>
+            <Ionicons name="book-outline" size={64} color={COLORS.textMuted} />
             <Text style={styles.emptyTitle}>Kurs bulunamadı</Text>
             <Text style={styles.emptyDescription}>
-              Arama kriterlerinizi değiştirerek tekrar deneyin
+              {selectedFilter === "enrolled"
+                ? "Henüz hiçbir kursa kayıt olmadınız"
+                : "Bu kategoride kurs bulunmuyor"}
             </Text>
           </View>
-        }
-      />
+        )}
+      </ScrollView>
     </View>
   );
 };
@@ -365,241 +319,185 @@ const CoursesScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#030712",
+    backgroundColor: COLORS.background,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-    paddingTop: 40,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: SPACING[4],
+    paddingTop: SPACING[8],
+    paddingBottom: SPACING[4],
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#f9fafb",
-    marginBottom: 8,
+    fontSize: TYPOGRAPHY["3xl"],
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.text,
   },
-  headerSubtitle: {
-    fontSize: 16,
-    color: "#64748b",
-    lineHeight: 24,
+  searchButton: {
+    padding: SPACING[2],
+    borderRadius: RADIUS.base,
+    backgroundColor: COLORS.surface,
   },
-  filtersContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#0f172a",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: "#334155",
-  },
-  searchIcon: {
-    marginRight: 12,
-  },
-  searchInput: {
+  content: {
     flex: 1,
-    fontSize: 16,
-    color: "#f9fafb",
   },
-  filterScrollView: {
+  filterContainer: {
+    paddingBottom: SPACING[4],
+  },
+  filterChips: {
     flexDirection: "row",
-  },
-  filterLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#f9fafb",
-    alignSelf: "center",
-    marginRight: 8,
+    paddingHorizontal: SPACING[4],
+    gap: SPACING[2],
   },
   filterChip: {
-    backgroundColor: "#1e293b",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 8,
+    paddingHorizontal: SPACING[4],
+    paddingVertical: SPACING[2],
+    borderRadius: RADIUS.full,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: COLORS.border,
   },
   activeFilterChip: {
-    backgroundColor: "#3b82f6",
-    borderColor: "#3b82f6",
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   filterChipText: {
-    fontSize: 14,
-    color: "#94a3b8",
-    fontWeight: "500",
+    fontSize: TYPOGRAPHY.sm,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
+    color: COLORS.textSecondary,
   },
   activeFilterChipText: {
-    color: "white",
+    color: COLORS.white,
   },
-  coursesList: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+  section: {
+    marginBottom: SPACING[6],
   },
-  courseCardContainer: {
-    marginBottom: 20,
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: SPACING[4],
+    marginBottom: SPACING[4],
+  },
+  sectionTitle: {
+    fontSize: TYPOGRAPHY.xl,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    color: COLORS.text,
+  },
+  seeAllText: {
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.primary,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
+  },
+  horizontalScroll: {
+    paddingLeft: SPACING[4],
+    paddingRight: SPACING[4],
+  },
+  coursesGrid: {
+    paddingHorizontal: SPACING[4],
+    gap: SPACING[4],
   },
   courseCard: {
-    backgroundColor: "#0f172a",
-    borderWidth: 1,
-    borderColor: "#334155",
+    width: wp(85),
+    marginRight: SPACING[4],
+    borderRadius: RADIUS.lg,
     overflow: "hidden",
+    ...SHADOWS.md,
+  },
+  courseGradient: {
+    padding: SPACING[4],
+    minHeight: 160,
   },
   courseHeader: {
-    height: 120,
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
-  },
-  courseHeaderContent: {
-    alignItems: "center",
-  },
-  enrolledBadge: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
-  },
-  enrolledText: {
-    fontSize: 12,
-    color: "white",
-    fontWeight: "600",
-  },
-  courseContent: {
-    padding: 20,
-  },
-  courseMetaRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
+    alignItems: "flex-start",
+    marginBottom: SPACING[3],
   },
   levelChip: {
-    alignSelf: "flex-start",
+    borderRadius: RADIUS.full,
   },
   levelChipText: {
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: TYPOGRAPHY.xs,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
   },
-  ratingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
+  enrolledBadge: {
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 12,
+    padding: SPACING[1],
   },
-  ratingText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#f9fafb",
-  },
-  reviewsText: {
-    fontSize: 14,
-    color: "#64748b",
+  courseContent: {
+    flex: 1,
+    justifyContent: "space-between",
   },
   courseTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#f9fafb",
-    marginBottom: 8,
+    fontSize: TYPOGRAPHY.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.white,
+    marginBottom: SPACING[1],
   },
   courseDescription: {
-    fontSize: 14,
-    color: "#64748b",
-    lineHeight: 20,
-    marginBottom: 16,
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.white,
+    opacity: 0.9,
+    marginBottom: SPACING[3],
   },
-  courseStatsRow: {
+  courseMeta: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
+    gap: SPACING[4],
+    marginBottom: SPACING[2],
   },
-  courseStat: {
+  metaItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: SPACING[1],
   },
-  courseStatText: {
-    fontSize: 12,
-    color: "#64748b",
+  metaText: {
+    fontSize: TYPOGRAPHY.xs,
+    color: COLORS.white,
+    opacity: 0.8,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
   progressContainer: {
-    marginBottom: 16,
-  },
-  progressHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  progressLabel: {
-    fontSize: 14,
-    color: "#94a3b8",
-  },
-  progressPercentage: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#f9fafb",
+    marginTop: SPACING[2],
   },
   progressBar: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#1e293b",
+    height: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    borderRadius: 2,
+    overflow: "hidden",
+    marginBottom: SPACING[1],
   },
-  tagsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 20,
+  progressFill: {
+    height: "100%",
+    backgroundColor: COLORS.white,
+    borderRadius: 2,
   },
-  tagChip: {
-    backgroundColor: "transparent",
-    borderColor: "#334155",
+  progressText: {
+    fontSize: TYPOGRAPHY.xs,
+    color: COLORS.white,
+    opacity: 0.8,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
-  tagText: {
-    fontSize: 12,
-    color: "#94a3b8",
-  },
-  courseFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  emptyState: {
     alignItems: "center",
-  },
-  coursePrice: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#f9fafb",
-  },
-  courseButton: {
-    borderRadius: 8,
-  },
-  courseButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  emptyContainer: {
-    alignItems: "center",
-    paddingVertical: 60,
+    justifyContent: "center",
+    paddingVertical: SPACING[12],
+    paddingHorizontal: SPACING[4],
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#f9fafb",
-    marginTop: 16,
-    marginBottom: 8,
+    fontSize: TYPOGRAPHY.xl,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    color: COLORS.text,
+    marginTop: SPACING[4],
+    marginBottom: SPACING[2],
   },
   emptyDescription: {
-    fontSize: 14,
-    color: "#64748b",
+    fontSize: TYPOGRAPHY.base,
+    color: COLORS.textSecondary,
     textAlign: "center",
+    lineHeight: TYPOGRAPHY.lineHeight.base,
   },
 });
 

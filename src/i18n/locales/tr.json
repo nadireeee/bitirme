@@ -6,7 +6,7 @@
     "aiChat": "AI Chat",
     "profile": "Profil",
     "codeEditor": "Kod Editörü",
-    "quiz": "Quiz",
+    "quiz": "Sınavlar",
     "forum": "Forum",
     "progress": "İlerleme",
     "aiMentor": "AI Mentor",
@@ -14,6 +14,55 @@
     "learn": "Öğren",
     "aiSupport": "AI Destek",
     "community": "Topluluk"
+  },
+  "quiz": {
+    "title": "Sınavlar ve Testler",
+    "subtitle": "C/C++ bilginizi test edin ve seviyenizi ölçün",
+    "levels": {
+      "all": "Tümü",
+      "beginner": "Başlangıç",
+      "intermediate": "Orta",
+      "advanced": "İleri"
+    },
+    "difficulty": {
+      "beginner": "Başlangıç",
+      "intermediate": "Orta",
+      "advanced": "İleri"
+    },
+    "stats": {
+      "estimatedTime": "dk",
+      "questions": "soru",
+      "passingScore": "geçme"
+    },
+    "actions": {
+      "start": "Başla",
+      "next": "Sonraki Soru",
+      "finish": "Tamamla",
+      "retry": "Tekrar Çöz",
+      "mainMenu": "Ana Menü"
+    },
+    "results": {
+      "congratulations": "Tebrikler!",
+      "tryAgain": "Tekrar Deneyin",
+      "completed": "testi tamamlandı",
+      "points": "Puan",
+      "correct": "Doğru"
+    },
+    "categories": {
+      "introCpp": "C++'a Giriş",
+      "developmentEnvironment": "Geliştirme Ortamı",
+      "cppBasics": "C++ Temelleri",
+      "iostreamOperations": "Giriş/Çıkış İşlemleri",
+      "functions": "Fonksiyonlar",
+      "fileOperations": "Dosya G/Ç",
+      "arrays": "Diziler",
+      "strings": "Strings",
+      "oopBasics": "OOP Temelleri",
+      "inheritancePolymorphism": "Kalıtım ve Çok Biçimlilik",
+      "templates": "Şablonlar",
+      "stl": "Standart Şablon Kütüphanesi",
+      "modernCpp": "Modern C++ Özellikleri"
+    }
   },
   "home": {
     "title": "CodeMentor AI",

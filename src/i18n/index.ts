@@ -8,18 +8,20 @@ import en from "./locales/en.json";
 
 const LANGUAGE_STORAGE_KEY = "app_language";
 
-// Language detector that uses AsyncStorage
+// Synchronous language detector for better mobile compatibility
 const languageDetector = {
   type: "languageDetector" as const,
   async: true,
-  detect: async (callback: (lang: string) => void) => {
-    try {
-      const savedLanguage = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
-      callback(savedLanguage || "tr"); // Default to Turkish
-    } catch (error) {
-      console.error("Error loading saved language:", error);
-      callback("tr");
-    }
+  detect: (callback: (lang: string) => void) => {
+    // Try to get saved language asynchronously
+    AsyncStorage.getItem(LANGUAGE_STORAGE_KEY)
+      .then((savedLanguage) => {
+        callback(savedLanguage || "tr"); // Default to Turkish
+      })
+      .catch((error) => {
+        console.error("Error loading saved language:", error);
+        callback("tr"); // Fallback to Turkish
+      });
   },
   init: () => {},
   cacheUserLanguage: async (language: string) => {
@@ -31,26 +33,62 @@ const languageDetector = {
   },
 };
 
-i18n
-  .use(languageDetector)
-  .use(initReactI18next)
-  .init({
-    resources: {
-      tr: {
-        translation: tr,
+// Initialize i18n synchronously with better error handling
+const initI18n = async () => {
+  try {
+    await i18n
+      .use(languageDetector)
+      .use(initReactI18next)
+      .init({
+        resources: {
+          tr: {
+            translation: tr,
+          },
+          en: {
+            translation: en,
+          },
+        },
+        lng: "tr", // Set default language immediately
+        fallbackLng: "tr",
+        debug: false, // Disable debug to reduce console warnings
+        returnObjects: true, // Enable object returns for nested translations
+        returnEmptyString: false, // Return key if translation is empty
+        returnNull: false, // Don't return null
+        interpolation: {
+          escapeValue: false,
+        },
+        react: {
+          useSuspense: false,
+        },
+        // Add compatibility options for mobile
+        compatibilityJSON: "v3",
+
+        // Ensure immediate availability
+        initImmediate: false,
+
+        // Suppress warnings
+        missingKeyHandler: false,
+        saveMissing: false,
+      });
+
+    console.log("i18n initialized successfully");
+  } catch (error) {
+    console.error("Error initializing i18n:", error);
+    // Fallback initialization without AsyncStorage
+    await i18n.init({
+      resources: {
+        tr: { translation: tr },
+        en: { translation: en },
       },
-      en: {
-        translation: en,
-      },
-    },
-    fallbackLng: "tr",
-    debug: __DEV__,
-    interpolation: {
-      escapeValue: false,
-    },
-    react: {
-      useSuspense: false,
-    },
-  });
+      lng: "tr",
+      fallbackLng: "tr",
+      interpolation: { escapeValue: false },
+      react: { useSuspense: false },
+    });
+  }
+};
+
+// Initialize immediately
+initI18n();
 
 export default i18n;

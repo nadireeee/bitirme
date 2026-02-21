@@ -2,860 +2,467 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
+  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-  Image,
-  Animated,
-  Easing,
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import {
-  Card,
-  Chip,
-  Button,
-  Avatar,
-  ProgressBar,
+  Alert,
   Switch,
-  Divider,
-} from "react-native-paper";
-import { LinearGradient } from "expo-linear-gradient";
+} from "react-native";
+import { Card, Button, Divider } from "react-native-paper";
+import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
-import { useTheme } from "../contexts/ThemeContext";
-import { useLanguage } from "../contexts/LanguageContext";
-import LanguageSwitch from "../components/common/LanguageSwitch";
+import {
+  COLORS,
+  TYPOGRAPHY,
+  SPACING,
+  RADIUS,
+  SHADOWS,
+  wp,
+  hp,
+  isSmallDevice,
+} from "../styles/designSystem";
 
-const { width, height } = Dimensions.get("window");
+interface UserProfile {
+  name: string;
+  email: string;
+  level: string;
+  joinDate: string;
+  avatar?: string;
+}
+
+interface UserStats {
+  totalQuizzes: number;
+  averageScore: number;
+  streakCount: number;
+  totalPoints: number;
+  completedCourses: number;
+}
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
-  const { t } = useTranslation();
-  const { isDarkMode, toggleTheme, colors } = useTheme();
-  const { currentLanguage } = useLanguage();
-  const [activeTab, setActiveTab] = useState("achievements");
+  const { t, i18n } = useTranslation();
 
-  // Animation values
-  const [fadeAnim] = useState(new Animated.Value(0));
-  const [slideAnim] = useState(new Animated.Value(50));
-  const [scaleAnim] = useState(new Animated.Value(0.9));
-  const [rotateAnim] = useState(new Animated.Value(0));
-  const [pulseAnim] = useState(new Animated.Value(1));
-  const [parallaxAnim] = useState(new Animated.Value(0));
+  const [activeTab, setActiveTab] = useState<"profile" | "stats" | "settings">(
+    "profile",
+  );
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [notifications, setNotifications] = useState(true);
 
-  useEffect(() => {
-    // Entrance animations - simplified for web compatibility
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 1200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 1000,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-    ]).start();
+  const [userProfile] = useState<UserProfile>({
+    name: "Ahmet Yılmaz",
+    email: "ahmet@example.com",
+    level: "Orta Seviye",
+    joinDate: "15 Ocak 2024",
+  });
 
-    // Continuous animations - simplified
-    const rotateAnimation = Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 20000,
-        useNativeDriver: true,
-      }),
-    );
+  const [userStats] = useState<UserStats>({
+    totalQuizzes: 12,
+    averageScore: 85,
+    streakCount: 5,
+    totalPoints: 1240,
+    completedCourses: 3,
+  });
 
-    const pulseAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.1,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-
-    rotateAnimation.start();
-    pulseAnimation.start();
-
-    return () => {
-      rotateAnimation.stop();
-      pulseAnimation.stop();
-    };
-  }, []);
-
-  const user = {
-    name: "Ethan Carter",
-    email: "ethan.carter@example.com",
-    level: "Intermediate",
-    joinDate: "Ocak 2024",
-    coursesCompleted: 12,
-    exercisesSolved: 247,
-    totalPoints: 2456,
-    currentStreak: 15,
-    rank: 1834,
-    avatar: "https://i.pravatar.cc/150?img=5",
-  };
-
-  const achievements = [
-    {
-      id: 1,
-      title: t("profile.achievements.cppMaster", "C++ Master"),
-      description: t(
-        "profile.achievements.cppMasterDesc",
-        "Completed all C++ courses",
-      ),
-      icon: "code-slash",
-      color: "#3b82f6",
-      earned: true,
-      date: "2024",
-      progress: 100,
-    },
-    {
-      id: 2,
-      title: t("profile.achievements.algorithmExpert", "Algorithm Expert"),
-      description: t(
-        "profile.achievements.algorithmExpertDesc",
-        "Solved 100+ algorithm challenges",
-      ),
-      icon: "bulb",
-      color: "#8b5cf6",
-      earned: true,
-      date: "2024",
-      progress: 100,
-    },
-    {
-      id: 3,
-      title: t("profile.achievements.codeReviewer", "Code Reviewer"),
-      description: t(
-        "profile.achievements.codeReviewerDesc",
-        "Reviewed 50+ code submissions",
-      ),
-      icon: "checkmark-circle",
-      color: "#10b981",
-      earned: true,
-      date: "2024",
-      progress: 100,
-    },
-    {
-      id: 4,
-      title: t("profile.achievements.streakMaster", "Streak Master"),
-      description: t(
-        "profile.achievements.streakMasterDesc",
-        "15 day learning streak",
-      ),
-      icon: "flame",
-      color: "#f59e0b",
-      earned: true,
-      date: "2024",
-      progress: 100,
-    },
-    {
-      id: 5,
-      title: t("profile.achievements.mentor", "Mentor"),
-      description: t("profile.achievements.mentorDesc", "Helped 25+ students"),
-      icon: "people",
-      color: "#ef4444",
-      earned: false,
-      date: "2024",
-      progress: 75,
-    },
-    {
-      id: 6,
-      title: t("profile.achievements.debugger", "Debug Master"),
-      description: t(
-        "profile.achievements.debuggerDesc",
-        "Fixed 50+ code bugs",
-      ),
-      icon: "bug",
-      color: "#3b82f6",
-      earned: false,
-      date: "2024",
-      progress: 45,
-    },
-  ];
-
-  const activities = [
-    {
-      id: 1,
-      type: "course_completed",
-      title: t("profile.activity.courseCompleted", "Course completed"),
-      description: "Advanced C++ Programming",
-      time: "2 saat önce",
-      icon: "book",
-      color: "#10b981",
-    },
-    {
-      id: 2,
-      type: "exercise_solved",
-      title: t("profile.activity.exerciseSolved", "Exercise solved"),
-      description: "Binary Tree Traversal",
-      time: "5 saat önce",
-      icon: "code-slash",
-      color: "#3b82f6",
-    },
-    {
-      id: 3,
-      type: "achievement_earned",
-      title: t("profile.activity.achievementEarned", "Achievement earned"),
-      description: "Streak Master",
-      time: "1 gün önce",
-      icon: "trophy",
-      color: "#f59e0b",
-    },
-  ];
-
-  const handleTabPress = (tabId: string) => {
-    // Animate tab change
-    Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 0.95,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    setActiveTab(tabId);
-  };
-
-  const AnimatedAchievementCard = ({ achievement, index }) => {
-    const [cardScale] = useState(new Animated.Value(1));
-    const [cardRotate] = useState(new Animated.Value(0));
-
-    const handlePress = () => {
-      Animated.sequence([
-        Animated.parallel([
-          Animated.timing(cardScale, {
-            toValue: 0.95,
-            duration: 100,
-            useNativeDriver: true,
-          }),
-          Animated.timing(cardRotate, {
-            toValue: 1,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.parallel([
-          Animated.timing(cardScale, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.timing(cardRotate, {
-            toValue: 0,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-        ]),
-      ]).start();
-    };
-
-    const rotateInterpolate = cardRotate.interpolate({
-      inputRange: [0, 1],
-      outputRange: ["0deg", "5deg"],
-    });
-
-    return (
-      <Animated.View
-        style={[
-          {
-            transform: [{ scale: cardScale }, { rotate: rotateInterpolate }],
+  const handleLogout = () => {
+    Alert.alert(
+      "Çıkış Yap",
+      "Hesabınızdan çıkmak istediğinizden emin misiniz?",
+      [
+        { text: "İptal", style: "cancel" },
+        {
+          text: "Çıkış Yap",
+          style: "destructive",
+          onPress: () => {
+            // Handle logout logic
+            navigation.navigate("Login" as any);
           },
-        ]}
-      >
-        <TouchableOpacity
-          onPress={handlePress}
-          style={[
-            styles.achievementCard,
-            {
-              backgroundColor: colors.card,
-              shadowColor: achievement.color,
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: achievement.earned ? 0.3 : 0.1,
-              shadowRadius: 16,
-              elevation: achievement.earned ? 8 : 4,
-            },
-            !achievement.earned && styles.achievementLocked,
-          ]}
-        >
-          <LinearGradient
-            colors={
-              achievement.earned
-                ? [`${achievement.color}20`, `${achievement.color}10`]
-                : [`${colors.border}20`, `${colors.border}10`]
-            }
-            style={styles.achievementGradient}
-          >
-            <View style={styles.achievementContent}>
-              <Animated.View
-                style={[
-                  styles.achievementIcon,
-                  {
-                    backgroundColor: achievement.earned
-                      ? achievement.color
-                      : colors.border,
-                    transform: [{ scale: pulseAnim }],
-                  },
-                ]}
-              >
-                <Ionicons
-                  name={achievement.icon as any}
-                  size={28}
-                  color={achievement.earned ? "white" : colors.textSecondary}
-                />
-              </Animated.View>
-
-              <Text style={[styles.achievementTitle, { color: colors.text }]}>
-                {achievement.title}
-              </Text>
-
-              <Text
-                style={[
-                  styles.achievementDesc,
-                  { color: colors.textSecondary },
-                ]}
-              >
-                {achievement.description}
-              </Text>
-
-              {!achievement.earned && (
-                <View style={styles.progressContainer}>
-                  <ProgressBar
-                    progress={achievement.progress / 100}
-                    color={achievement.color}
-                    style={styles.achievementProgress}
-                  />
-                  <Text
-                    style={[
-                      styles.progressText,
-                      { color: colors.textSecondary },
-                    ]}
-                  >
-                    %{achievement.progress}
-                  </Text>
-                </View>
-              )}
-
-              {achievement.earned && (
-                <Chip
-                  mode="filled"
-                  style={[
-                    styles.earnedChip,
-                    { backgroundColor: achievement.color },
-                  ]}
-                  textStyle={{
-                    color: "white",
-                    fontSize: 10,
-                    fontWeight: "600",
-                  }}
-                >
-                  ✨ {achievement.date}
-                </Chip>
-              )}
-            </View>
-          </LinearGradient>
-        </TouchableOpacity>
-      </Animated.View>
+        },
+      ],
     );
   };
 
-  const renderAchievements = () => (
-    <Animated.View
-      style={[
-        styles.tabContent,
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-        },
-      ]}
-    >
-      <View style={styles.achievementsGrid}>
-        {achievements.map((achievement, index) => (
-          <AnimatedAchievementCard
-            key={achievement.id}
-            achievement={achievement}
-            index={index}
-          />
-        ))}
-      </View>
-    </Animated.View>
-  );
-
-  const renderActivity = () => (
-    <Animated.View
-      style={[
-        styles.tabContent,
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-        },
-      ]}
-    >
-      {activities.map((activity, index) => (
-        <Animated.View
-          key={activity.id}
-          style={[
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <Card style={[styles.activityCard, { backgroundColor: colors.card }]}>
-            <LinearGradient
-              colors={[`${activity.color}15`, `${activity.color}05`]}
-              style={styles.activityGradient}
-            >
-              <View style={styles.activityContent}>
-                <Animated.View
-                  style={[
-                    styles.activityIcon,
-                    {
-                      backgroundColor: activity.color,
-                      transform: [{ scale: pulseAnim }],
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name={activity.icon as any}
-                    size={20}
-                    color="white"
-                  />
-                </Animated.View>
-                <View style={styles.activityText}>
-                  <Text style={[styles.activityTitle, { color: colors.text }]}>
-                    {activity.title}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.activityDesc,
-                      { color: colors.textSecondary },
-                    ]}
-                  >
-                    {activity.description}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.activityTime,
-                      { color: colors.textSecondary },
-                    ]}
-                  >
-                    {activity.time}
-                  </Text>
-                </View>
-              </View>
-            </LinearGradient>
-          </Card>
-        </Animated.View>
-      ))}
-    </Animated.View>
-  );
-
-  const renderSettings = () => (
-    <Animated.View
-      style={[
-        styles.tabContent,
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-        },
-      ]}
-    >
-      <Card style={[styles.settingsCard, { backgroundColor: colors.card }]}>
-        <LinearGradient
-          colors={[`${colors.primary}10`, `${colors.secondary}05`]}
-          style={styles.settingsGradient}
-        >
-          <View style={styles.settingsContent}>
-            <Text style={[styles.settingsSection, { color: colors.text }]}>
-              {t("profile.settings.appearance", "Görünüm")} ✨
-            </Text>
-
-            <TouchableOpacity style={styles.settingItem} onPress={toggleTheme}>
-              <View style={styles.settingInfo}>
-                <Animated.View
-                  style={[
-                    styles.settingIconContainer,
-                    {
-                      transform: [
-                        {
-                          rotate: rotateAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: ["0deg", "360deg"],
-                          }),
-                        },
-                      ],
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name={isDarkMode ? "moon" : "sunny"}
-                    size={20}
-                    color={colors.text}
-                  />
-                </Animated.View>
-                <Text style={[styles.settingLabel, { color: colors.text }]}>
-                  {t("profile.settings.darkMode", "Koyu Mod")}
-                </Text>
-              </View>
-              <Switch
-                value={isDarkMode}
-                onValueChange={toggleTheme}
-                color={colors.primary}
-              />
-            </TouchableOpacity>
-
-            <Divider
-              style={{ backgroundColor: colors.border, marginVertical: 15 }}
-            />
-
-            <Text style={[styles.settingsSection, { color: colors.text }]}>
-              {t("profile.settings.language", "Dil")} 🌍
-            </Text>
-
-            <View style={styles.settingItem}>
-              <View style={styles.settingInfo}>
-                <View style={styles.settingIconContainer}>
-                  <Ionicons name="language" size={20} color={colors.text} />
-                </View>
-                <Text style={[styles.settingLabel, { color: colors.text }]}>
-                  {t("profile.settings.appLanguage", "Uygulama Dili")}
-                </Text>
-              </View>
-              <LanguageSwitch variant="button" showLabel={true} />
-            </View>
-
-            <Divider
-              style={{ backgroundColor: colors.border, marginVertical: 15 }}
-            />
-
-            <Text style={[styles.settingsSection, { color: colors.text }]}>
-              {t("profile.settings.notifications", "Bildirimler")} 🔔
-            </Text>
-
-            <View style={styles.settingItem}>
-              <View style={styles.settingInfo}>
-                <View style={styles.settingIconContainer}>
-                  <Ionicons
-                    name="notifications"
-                    size={20}
-                    color={colors.text}
-                  />
-                </View>
-                <Text style={[styles.settingLabel, { color: colors.text }]}>
-                  {t("profile.settings.pushNotifications", "Push Bildirimleri")}
-                </Text>
-              </View>
-              <Switch
-                value={true}
-                onValueChange={() => {}}
-                color={colors.primary}
-              />
-            </View>
-          </View>
-        </LinearGradient>
-      </Card>
-    </Animated.View>
-  );
+  const toggleLanguage = () => {
+    const newLang = i18n.language === "tr" ? "en" : "tr";
+    i18n.changeLanguage(newLang);
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case "achievements":
-        return renderAchievements();
-      case "activity":
-        return renderActivity();
+      case "profile":
+        return (
+          <View style={styles.tabContent}>
+            {/* Profile Info */}
+            <Card style={styles.profileCard}>
+              <View style={styles.profileHeader}>
+                <View style={styles.avatarContainer}>
+                  <View style={styles.avatar}>
+                    <Ionicons name="person" size={40} color={COLORS.white} />
+                  </View>
+                  <TouchableOpacity style={styles.editAvatarButton}>
+                    <Ionicons name="camera" size={16} color={COLORS.primary} />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.profileInfo}>
+                  <Text style={styles.profileName}>{userProfile.name}</Text>
+                  <Text style={styles.profileEmail}>{userProfile.email}</Text>
+                  <Text style={styles.profileLevel}>{userProfile.level}</Text>
+                </View>
+              </View>
+            </Card>
+
+            {/* Quick Stats */}
+            <View style={styles.quickStats}>
+              <View style={styles.quickStatItem}>
+                <Text style={styles.quickStatNumber}>
+                  {userStats.totalQuizzes}
+                </Text>
+                <Text style={styles.quickStatLabel}>Quiz</Text>
+              </View>
+              <View style={styles.quickStatItem}>
+                <Text style={styles.quickStatNumber}>
+                  {userStats.averageScore}%
+                </Text>
+                <Text style={styles.quickStatLabel}>Başarı</Text>
+              </View>
+              <View style={styles.quickStatItem}>
+                <Text style={styles.quickStatNumber}>
+                  {userStats.streakCount}
+                </Text>
+                <Text style={styles.quickStatLabel}>Seri</Text>
+              </View>
+            </View>
+
+            {/* Profile Actions */}
+            <View style={styles.profileActions}>
+              <TouchableOpacity style={styles.actionButton}>
+                <Ionicons
+                  name="person-outline"
+                  size={20}
+                  color={COLORS.primary}
+                />
+                <Text style={styles.actionButtonText}>Profili Düzenle</Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={COLORS.textSecondary}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.actionButton}>
+                <Ionicons
+                  name="shield-outline"
+                  size={20}
+                  color={COLORS.primary}
+                />
+                <Text style={styles.actionButtonText}>Gizlilik</Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={COLORS.textSecondary}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.actionButton}>
+                <Ionicons
+                  name="help-circle-outline"
+                  size={20}
+                  color={COLORS.primary}
+                />
+                <Text style={styles.actionButtonText}>Yardım & Destek</Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={COLORS.textSecondary}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        );
+
+      case "stats":
+        return (
+          <View style={styles.tabContent}>
+            {/* Detailed Stats */}
+            <Card style={styles.statsCard}>
+              <View style={styles.statsHeader}>
+                <Text style={styles.statsTitle}>İstatistikler</Text>
+                <TouchableOpacity>
+                  <Text style={styles.viewDetailsText}>Detaylar</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.statsGrid}>
+                <View style={styles.statItem}>
+                  <View
+                    style={[
+                      styles.statIcon,
+                      { backgroundColor: COLORS.primary },
+                    ]}
+                  >
+                    <Ionicons name="trophy" size={20} color={COLORS.white} />
+                  </View>
+                  <Text style={styles.statValue}>{userStats.totalPoints}</Text>
+                  <Text style={styles.statLabel}>Toplam Puan</Text>
+                </View>
+
+                <View style={styles.statItem}>
+                  <View
+                    style={[
+                      styles.statIcon,
+                      { backgroundColor: COLORS.success },
+                    ]}
+                  >
+                    <Ionicons name="book" size={20} color={COLORS.white} />
+                  </View>
+                  <Text style={styles.statValue}>
+                    {userStats.completedCourses}
+                  </Text>
+                  <Text style={styles.statLabel}>Tamamlanan Kurs</Text>
+                </View>
+
+                <View style={styles.statItem}>
+                  <View
+                    style={[
+                      styles.statIcon,
+                      { backgroundColor: COLORS.warning },
+                    ]}
+                  >
+                    <Ionicons name="flame" size={20} color={COLORS.white} />
+                  </View>
+                  <Text style={styles.statValue}>{userStats.streakCount}</Text>
+                  <Text style={styles.statLabel}>En Uzun Seri</Text>
+                </View>
+
+                <View style={styles.statItem}>
+                  <View
+                    style={[styles.statIcon, { backgroundColor: COLORS.info }]}
+                  >
+                    <Ionicons name="star" size={20} color={COLORS.white} />
+                  </View>
+                  <Text style={styles.statValue}>
+                    {userStats.averageScore}%
+                  </Text>
+                  <Text style={styles.statLabel}>Ortalama Başarı</Text>
+                </View>
+              </View>
+            </Card>
+
+            {/* Recent Achievements */}
+            <Card style={styles.achievementsCard}>
+              <Text style={styles.achievementsTitle}>Son Başarılar</Text>
+              <View style={styles.achievementsList}>
+                {[
+                  {
+                    icon: "medal",
+                    title: "İlk Quiz",
+                    desc: "İlk quizinizi tamamladınız",
+                    color: COLORS.warning,
+                  },
+                  {
+                    icon: "star",
+                    title: "Mükemmel Puan",
+                    desc: "100% puan aldınız",
+                    color: COLORS.success,
+                  },
+                  {
+                    icon: "flash",
+                    title: "Hız Şampiyonu",
+                    desc: "Hızlı quiz çözdünüz",
+                    color: COLORS.info,
+                  },
+                ].map((achievement, index) => (
+                  <View key={index} style={styles.achievementItem}>
+                    <View
+                      style={[
+                        styles.achievementIcon,
+                        { backgroundColor: achievement.color },
+                      ]}
+                    >
+                      <Ionicons
+                        name={achievement.icon as any}
+                        size={16}
+                        color={COLORS.white}
+                      />
+                    </View>
+                    <View style={styles.achievementContent}>
+                      <Text style={styles.achievementTitle}>
+                        {achievement.title}
+                      </Text>
+                      <Text style={styles.achievementDesc}>
+                        {achievement.desc}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </Card>
+          </View>
+        );
+
       case "settings":
-        return renderSettings();
+        return (
+          <View style={styles.tabContent}>
+            {/* App Settings */}
+            <Card style={styles.settingsCard}>
+              <Text style={styles.settingsTitle}>Uygulama</Text>
+
+              <View style={styles.settingItem}>
+                <View style={styles.settingInfo}>
+                  <Ionicons name="moon" size={20} color={COLORS.primary} />
+                  <Text style={styles.settingLabel}>Karanlık Mod</Text>
+                </View>
+                <Switch
+                  value={isDarkMode}
+                  onValueChange={setIsDarkMode}
+                  trackColor={{ false: COLORS.gray300, true: COLORS.primary }}
+                  thumbColor={COLORS.white}
+                />
+              </View>
+
+              <Divider style={styles.settingDivider} />
+
+              <View style={styles.settingItem}>
+                <View style={styles.settingInfo}>
+                  <Ionicons
+                    name="notifications"
+                    size={20}
+                    color={COLORS.primary}
+                  />
+                  <Text style={styles.settingLabel}>Bildirimler</Text>
+                </View>
+                <Switch
+                  value={notifications}
+                  onValueChange={setNotifications}
+                  trackColor={{ false: COLORS.gray300, true: COLORS.primary }}
+                  thumbColor={COLORS.white}
+                />
+              </View>
+
+              <Divider style={styles.settingDivider} />
+
+              <TouchableOpacity
+                style={styles.settingItem}
+                onPress={toggleLanguage}
+              >
+                <View style={styles.settingInfo}>
+                  <Ionicons name="language" size={20} color={COLORS.primary} />
+                  <Text style={styles.settingLabel}>Dil</Text>
+                </View>
+                <View style={styles.settingValue}>
+                  <Text style={styles.settingValueText}>
+                    {i18n.language === "tr" ? "Türkçe" : "English"}
+                  </Text>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={16}
+                    color={COLORS.textSecondary}
+                  />
+                </View>
+              </TouchableOpacity>
+            </Card>
+
+            {/* Account Settings */}
+            <Card style={styles.settingsCard}>
+              <Text style={styles.settingsTitle}>Hesap</Text>
+
+              <TouchableOpacity style={styles.settingItem}>
+                <View style={styles.settingInfo}>
+                  <Ionicons name="key" size={20} color={COLORS.primary} />
+                  <Text style={styles.settingLabel}>Şifre Değiştir</Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={COLORS.textSecondary}
+                />
+              </TouchableOpacity>
+
+              <Divider style={styles.settingDivider} />
+
+              <TouchableOpacity style={styles.settingItem}>
+                <View style={styles.settingInfo}>
+                  <Ionicons name="download" size={20} color={COLORS.primary} />
+                  <Text style={styles.settingLabel}>Verileri İndir</Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={COLORS.textSecondary}
+                />
+              </TouchableOpacity>
+
+              <Divider style={styles.settingDivider} />
+
+              <TouchableOpacity
+                style={styles.settingItem}
+                onPress={handleLogout}
+              >
+                <View style={styles.settingInfo}>
+                  <Ionicons name="log-out" size={20} color={COLORS.error} />
+                  <Text style={[styles.settingLabel, { color: COLORS.error }]}>
+                    Çıkış Yap
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </Card>
+          </View>
+        );
+
       default:
-        return renderAchievements();
+        return null;
     }
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Animated Background */}
-      <Animated.View
-        style={[
-          styles.backgroundContainer,
-          {
-            transform: [
-              {
-                rotate: rotateAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ["0deg", "360deg"],
-                }),
-              },
-            ],
-          },
-        ]}
-      >
-        <View
-          style={[
-            styles.backgroundShape1,
-            { backgroundColor: `${colors.primary}10` },
-          ]}
-        />
-        <View
-          style={[
-            styles.backgroundShape2,
-            { backgroundColor: `${colors.secondary}08` },
-          ]}
-        />
-        <View
-          style={[
-            styles.backgroundShape3,
-            { backgroundColor: `${colors.success}06` },
-          ]}
-        />
-      </Animated.View>
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Profil</Text>
+        <View style={styles.placeholder} />
+      </View>
 
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header with Glassmorphism */}
-        <Animated.View
-          style={[
-            {
-              opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }],
-            },
-          ]}
-        >
-          <LinearGradient
-            colors={[colors.primary, colors.secondary, `${colors.primary}80`]}
-            style={styles.header}
+      {/* Tab Navigation */}
+      <View style={styles.tabNavigation}>
+        {[
+          { key: "profile", label: "Profil", icon: "person" },
+          { key: "stats", label: "İstatistik", icon: "bar-chart" },
+          { key: "settings", label: "Ayarlar", icon: "settings" },
+        ].map((tab) => (
+          <TouchableOpacity
+            key={tab.key}
+            style={[
+              styles.tabButton,
+              activeTab === tab.key && styles.activeTabButton,
+            ]}
+            onPress={() => setActiveTab(tab.key as any)}
           >
-            <View style={styles.profileSection}>
-              <Animated.View
-                style={[
-                  {
-                    transform: [{ scale: pulseAnim }],
-                  },
-                ]}
-              >
-                <Avatar.Image
-                  size={90}
-                  source={{ uri: user.avatar }}
-                  style={[
-                    styles.avatar,
-                    {
-                      borderWidth: 4,
-                      borderColor: "rgba(255, 255, 255, 0.3)",
-                      shadowColor: colors.primary,
-                      shadowOffset: { width: 0, height: 10 },
-                      shadowOpacity: 0.3,
-                      shadowRadius: 20,
-                      elevation: 10,
-                    },
-                  ]}
-                />
-              </Animated.View>
-              <View style={styles.profileInfo}>
-                <Text style={styles.userName}>{user.name}</Text>
-                <Text style={styles.userEmail}>{user.email}</Text>
-                <Chip
-                  mode="outlined"
-                  style={styles.levelChip}
-                  textStyle={styles.levelText}
-                >
-                  ✨ {t(`userLevels.${user.level.toLowerCase()}`, user.level)}
-                </Chip>
-              </View>
-            </View>
-          </LinearGradient>
-        </Animated.View>
+            <Ionicons
+              name={tab.icon as any}
+              size={20}
+              color={
+                activeTab === tab.key ? COLORS.primary : COLORS.textSecondary
+              }
+            />
+            <Text
+              style={[
+                styles.tabButtonText,
+                activeTab === tab.key && styles.activeTabButtonText,
+              ]}
+            >
+              {tab.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-        {/* Stats with enhanced animations */}
-        <Animated.View
-          style={[
-            styles.statsContainer,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <View style={styles.statsGrid}>
-            {[
-              {
-                label: t("profile.coursesCompleted"),
-                value: user.coursesCompleted,
-                color: colors.primary,
-                icon: "book",
-              },
-              {
-                label: t("profile.exercisesSolved"),
-                value: user.exercisesSolved,
-                color: colors.secondary,
-                icon: "code-slash",
-              },
-              {
-                label: t("profile.totalPoints"),
-                value: user.totalPoints,
-                color: colors.success,
-                icon: "trophy",
-              },
-              {
-                label: t("profile.rank"),
-                value: `#${user.rank}`,
-                color: colors.warning,
-                icon: "star",
-              },
-            ].map((stat, index) => (
-              <Animated.View
-                key={index}
-                style={[
-                  {
-                    opacity: fadeAnim,
-                    transform: [{ translateY: slideAnim }],
-                  },
-                ]}
-              >
-                <Card
-                  style={[styles.statCard, { backgroundColor: colors.card }]}
-                >
-                  <LinearGradient
-                    colors={[`${stat.color}15`, `${stat.color}05`]}
-                    style={styles.statGradient}
-                  >
-                    <View style={styles.statContent}>
-                      <Animated.View
-                        style={[
-                          styles.statIcon,
-                          {
-                            backgroundColor: stat.color,
-                            transform: [{ scale: pulseAnim }],
-                          },
-                        ]}
-                      >
-                        <Ionicons
-                          name={stat.icon as any}
-                          size={20}
-                          color="white"
-                        />
-                      </Animated.View>
-                      <Text style={[styles.statValue, { color: stat.color }]}>
-                        {stat.value}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.statLabel,
-                          { color: colors.textSecondary },
-                        ]}
-                      >
-                        {stat.label}
-                      </Text>
-                    </View>
-                  </LinearGradient>
-                </Card>
-              </Animated.View>
-            ))}
-          </View>
-        </Animated.View>
-
-        {/* Enhanced Tabs */}
-        <Animated.View
-          style={[
-            styles.tabsContainer,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.tabsScrollView}
-          >
-            {[
-              {
-                id: "achievements",
-                label: t("profile.achievements"),
-                icon: "trophy",
-              },
-              { id: "activity", label: t("profile.activity"), icon: "time" },
-              {
-                id: "settings",
-                label: t("profile.settings.title", "Ayarlar"),
-                icon: "settings",
-              },
-            ].map((tab) => (
-              <TouchableOpacity
-                key={tab.id}
-                style={[
-                  styles.tab,
-                  {
-                    backgroundColor:
-                      activeTab === tab.id
-                        ? `${colors.primary}20`
-                        : "transparent",
-                    borderBottomColor: colors.border,
-                  },
-                  activeTab === tab.id && [
-                    styles.activeTab,
-                    { borderBottomColor: colors.primary },
-                  ],
-                ]}
-                onPress={() => handleTabPress(tab.id)}
-              >
-                <Ionicons
-                  name={tab.icon as any}
-                  size={20}
-                  color={
-                    activeTab === tab.id ? colors.primary : colors.textSecondary
-                  }
-                />
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    {
-                      color:
-                        activeTab === tab.id
-                          ? colors.primary
-                          : colors.textSecondary,
-                    },
-                  ]}
-                >
-                  {tab.label}
-                </Text>
-                {activeTab === tab.id && (
-                  <Animated.View
-                    style={[
-                      styles.tabIndicator,
-                      { backgroundColor: colors.primary },
-                    ]}
-                  />
-                )}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </Animated.View>
-
-        {/* Tab Content */}
-        <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-          {renderTabContent()}
-        </Animated.View>
+      {/* Tab Content */}
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {renderTabContent()}
       </ScrollView>
     </View>
   );
@@ -864,289 +471,292 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  backgroundContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: -1,
-  },
-  backgroundShape1: {
-    position: "absolute",
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    top: -100,
-    right: -100,
-  },
-  backgroundShape2: {
-    position: "absolute",
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    bottom: 100,
-    left: -50,
-  },
-  backgroundShape3: {
-    position: "absolute",
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    top: height * 0.4,
-    right: -30,
-  },
-  scrollView: {
-    flex: 1,
+    backgroundColor: COLORS.background,
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 40,
-    paddingHorizontal: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: SPACING[4],
+    paddingTop: SPACING[8],
+    paddingBottom: SPACING[4],
   },
-  profileSection: {
+  headerTitle: {
+    fontSize: TYPOGRAPHY["2xl"],
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.text,
+  },
+  placeholder: {
+    width: 24,
+  },
+  tabNavigation: {
+    flexDirection: "row",
+    backgroundColor: COLORS.surface,
+    marginHorizontal: SPACING[4],
+    borderRadius: RADIUS.lg,
+    padding: SPACING[1],
+    marginBottom: SPACING[4],
+  },
+  tabButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: SPACING[3],
+    borderRadius: RADIUS.base,
+    gap: SPACING[2],
+  },
+  activeTabButton: {
+    backgroundColor: COLORS.background,
+    ...SHADOWS.sm,
+  },
+  tabButtonText: {
+    fontSize: TYPOGRAPHY.sm,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
+    color: COLORS.textSecondary,
+  },
+  activeTabButtonText: {
+    color: COLORS.primary,
+  },
+  content: {
+    flex: 1,
+  },
+  tabContent: {
+    paddingHorizontal: SPACING[4],
+    paddingBottom: SPACING[8],
+  },
+
+  // Profile Tab Styles
+  profileCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    padding: SPACING[5],
+    marginBottom: SPACING[4],
+    ...SHADOWS.sm,
+  },
+  profileHeader: {
     flexDirection: "row",
     alignItems: "center",
   },
+  avatarContainer: {
+    position: "relative",
+    marginRight: SPACING[4],
+  },
   avatar: {
-    marginRight: 20,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: COLORS.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  editAvatarButton: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: COLORS.background,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: COLORS.surface,
   },
   profileInfo: {
     flex: 1,
   },
-  userName: {
-    fontSize: 26,
-    fontWeight: "800",
-    color: "white",
-    marginBottom: 4,
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
+  profileName: {
+    fontSize: TYPOGRAPHY.xl,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.text,
+    marginBottom: SPACING[1],
   },
-  userEmail: {
-    fontSize: 14,
-    color: "rgba(255, 255, 255, 0.8)",
-    marginBottom: 8,
+  profileEmail: {
+    fontSize: TYPOGRAPHY.base,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING[1],
   },
-  levelChip: {
-    alignSelf: "flex-start",
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderColor: "rgba(255, 255, 255, 0.3)",
+  profileLevel: {
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.primary,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
-  levelText: {
-    color: "white",
-    fontSize: 12,
-    fontWeight: "600",
+  quickStats: {
+    flexDirection: "row",
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    padding: SPACING[4],
+    marginBottom: SPACING[4],
+    ...SHADOWS.sm,
   },
-  statsContainer: {
-    padding: 20,
-    marginTop: -20,
+  quickStatItem: {
+    flex: 1,
+    alignItems: "center",
+  },
+  quickStatNumber: {
+    fontSize: TYPOGRAPHY["2xl"],
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.text,
+    marginBottom: SPACING[1],
+  },
+  quickStatLabel: {
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.textSecondary,
+  },
+  profileActions: {
+    gap: SPACING[1],
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    padding: SPACING[4],
+    gap: SPACING[3],
+  },
+  actionButtonText: {
+    flex: 1,
+    fontSize: TYPOGRAPHY.base,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
+    color: COLORS.text,
+  },
+
+  // Stats Tab Styles
+  statsCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    padding: SPACING[5],
+    marginBottom: SPACING[4],
+    ...SHADOWS.sm,
+  },
+  statsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: SPACING[4],
+  },
+  statsTitle: {
+    fontSize: TYPOGRAPHY.xl,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    color: COLORS.text,
+  },
+  viewDetailsText: {
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.primary,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
   },
   statsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
+    gap: SPACING[4],
   },
-  statCard: {
-    flex: 1,
-    minWidth: (width - 56) / 2,
-    borderRadius: 16,
-    elevation: 4,
-    overflow: "hidden",
-  },
-  statGradient: {
-    padding: 20,
-  },
-  statContent: {
+  statItem: {
+    width: (wp(100) - SPACING[4] * 2 - SPACING[5] * 2 - SPACING[4]) / 2,
     alignItems: "center",
   },
   statIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 12,
+    justifyContent: "center",
+    marginBottom: SPACING[2],
   },
   statValue: {
-    fontSize: 24,
-    fontWeight: "800",
-    marginBottom: 4,
+    fontSize: TYPOGRAPHY.xl,
+    fontWeight: TYPOGRAPHY.fontWeight.bold,
+    color: COLORS.text,
+    marginBottom: SPACING[1],
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.textSecondary,
     textAlign: "center",
-    fontWeight: "500",
   },
-  tabsContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 10,
+  achievementsCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    padding: SPACING[5],
+    ...SHADOWS.sm,
   },
-  tabsScrollView: {
+  achievementsTitle: {
+    fontSize: TYPOGRAPHY.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    color: COLORS.text,
+    marginBottom: SPACING[4],
+  },
+  achievementsList: {
+    gap: SPACING[3],
+  },
+  achievementItem: {
     flexDirection: "row",
-  },
-  tab: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    marginRight: 15,
-    borderBottomWidth: 3,
-    borderBottomColor: "transparent",
-    borderRadius: 25,
-    position: "relative",
-  },
-  activeTab: {
-    borderBottomWidth: 3,
-  },
-  tabLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginLeft: 8,
-  },
-  tabIndicator: {
-    position: "absolute",
-    bottom: -3,
-    left: 20,
-    right: 20,
-    height: 3,
-    borderRadius: 2,
-  },
-  tabContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 30,
-  },
-  achievementsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 16,
-  },
-  achievementCard: {
-    width: (width - 56) / 2,
-    borderRadius: 20,
-    overflow: "hidden",
-  },
-  achievementGradient: {
-    padding: 20,
-  },
-  achievementLocked: {
-    opacity: 0.7,
-  },
-  achievementContent: {
     alignItems: "center",
   },
   achievementIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  achievementTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    textAlign: "center",
-    marginBottom: 6,
-  },
-  achievementDesc: {
-    fontSize: 12,
-    textAlign: "center",
-    marginBottom: 12,
-    lineHeight: 16,
-  },
-  progressContainer: {
-    width: "100%",
-    marginBottom: 8,
-  },
-  achievementProgress: {
-    height: 6,
-    borderRadius: 3,
-    marginBottom: 4,
-  },
-  progressText: {
-    fontSize: 10,
-    textAlign: "right",
-  },
-  earnedChip: {
-    paddingHorizontal: 8,
-  },
-  activityCard: {
-    marginBottom: 16,
+    width: 32,
+    height: 32,
     borderRadius: 16,
-    elevation: 4,
-    overflow: "hidden",
-  },
-  activityGradient: {
-    padding: 16,
-  },
-  activityContent: {
-    flexDirection: "row",
     alignItems: "center",
-  },
-  activityIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
     justifyContent: "center",
-    alignItems: "center",
-    marginRight: 16,
+    marginRight: SPACING[3],
   },
-  activityText: {
+  achievementContent: {
     flex: 1,
   },
-  activityTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 4,
+  achievementTitle: {
+    fontSize: TYPOGRAPHY.base,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
+    color: COLORS.text,
+    marginBottom: SPACING[1],
   },
-  activityDesc: {
-    fontSize: 14,
-    marginBottom: 2,
+  achievementDesc: {
+    fontSize: TYPOGRAPHY.sm,
+    color: COLORS.textSecondary,
   },
-  activityTime: {
-    fontSize: 12,
-  },
+
+  // Settings Tab Styles
   settingsCard: {
-    borderRadius: 20,
-    elevation: 4,
-    overflow: "hidden",
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    padding: SPACING[5],
+    marginBottom: SPACING[4],
+    ...SHADOWS.sm,
   },
-  settingsGradient: {
-    padding: 20,
-  },
-  settingsContent: {
-    paddingVertical: 10,
-  },
-  settingsSection: {
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 20,
+  settingsTitle: {
+    fontSize: TYPOGRAPHY.lg,
+    fontWeight: TYPOGRAPHY.fontWeight.semibold,
+    color: COLORS.text,
+    marginBottom: SPACING[4],
   },
   settingItem: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 15,
+    justifyContent: "space-between",
+    paddingVertical: SPACING[3],
   },
   settingInfo: {
     flexDirection: "row",
     alignItems: "center",
-    flex: 1,
-  },
-  settingIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 16,
+    gap: SPACING[3],
   },
   settingLabel: {
-    fontSize: 16,
-    fontWeight: "500",
-    flex: 1,
+    fontSize: TYPOGRAPHY.base,
+    fontWeight: TYPOGRAPHY.fontWeight.medium,
+    color: COLORS.text,
+  },
+  settingValue: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING[2],
+  },
+  settingValueText: {
+    fontSize: TYPOGRAPHY.base,
+    color: COLORS.textSecondary,
+  },
+  settingDivider: {
+    backgroundColor: COLORS.border,
+    marginVertical: SPACING[2],
   },
 });
 
